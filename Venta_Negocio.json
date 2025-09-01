@@ -1,0 +1,2267 @@
+{
+  "name": "Venta_Negocio",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        544
+      ],
+      "id": "134d6414-7991-4098-a201-ad73be933679",
+      "name": "WhatsApp Trigger",
+      "webhookId": "308e4999-09f2-4eef-943f-2e15cf0f872d",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "hwD7ETMikaozwDtr",
+          "name": "Cuenta uno de prueba"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1952,
+        592
+      ],
+      "id": "a332fff2-3a91-4af6-a5bc-422c69a66aa4",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('data_extraction1').item.json.wa_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2064,
+        608
+      ],
+      "id": "ea19d87b-da58-499a-8fc1-289d8a13fece",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "QYN0UhXauGwlSaLm",
+          "name": "transito"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1816b788-3db9-4d49-bee1-d0ce22bbb3e3",
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "422d9d78-f06f-4b39-856e-1dc2995dd539"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "274fb551-9220-4973-9a59-db0e80151f75",
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Imagen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0e50ec0e-9edb-4310-b491-81535dddb451",
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "sticker",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sticker"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        240,
+        512
+      ],
+      "id": "c766a8e2-bf35-4e34-ab61-18ad98cf14ef",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $('data_extraction1').item.json.messages[0].audio.id }}"
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        464,
+        288
+      ],
+      "id": "ccbeb0db-4080-42ed-814b-309f558b9c4b",
+      "name": "Download media",
+      "webhookId": "618f3988-4b30-4083-87bf-f90e2d93ea7e",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "YoC3V7aBKJFC6Ew8",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        288
+      ],
+      "id": "e8f91d87-51f8-444e-87b1-d938e0480ab4",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "07LaH64obYWqX7mM",
+          "name": "Token de dos meses"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-1.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-1.5-flash"
+        },
+        "inputType": "binary",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        912,
+        288
+      ],
+      "id": "5f594a1c-6daf-4880-b316-d0758e9dc095",
+      "name": "Transcribe a recording1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b355a1d1-f888-4ce4-b12b-03a9644fb07e",
+              "name": "final_message",
+              "value": "={{ $json.texto_convertido }}",
+              "type": "string"
+            },
+            {
+              "id": "aa4f659e-93fd-458f-8cb0-d6b2bd655160",
+              "name": "sessionid",
+              "value": "={{ $('data_extraction1').item.json.messages[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "e0285878-11b8-4263-9086-f38238f4e76a",
+              "name": "datetime",
+              "value": "={{ new Date($('data_extraction1').item.json.date_time).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric' }) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        480
+      ],
+      "id": "bf665fb7-7c83-40dd-9f06-317dce025064",
+      "name": "FInals_message_text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b65575a3-b476-4c0f-8ce4-a7f93531b7f0",
+              "name": "final_message",
+              "value": "={{ $json.texto_convertido }}",
+              "type": "string"
+            },
+            {
+              "id": "bf8845d4-5e4e-4596-b9d9-ec7940739e0c",
+              "name": "sessionid",
+              "value": "={{ $('data_extraction1').item.json.sessionid }}",
+              "type": "string"
+            },
+            {
+              "id": "d1aea00f-74e0-4acd-bf3d-5984b8eade6c",
+              "name": "datetime",
+              "value": "={{ new Date($('data_extraction1').item.json.date_time).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric' }) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        288
+      ],
+      "id": "66e1dbbf-1aa5-43f1-a758-66b03882f1f8",
+      "name": "Final_message_audio"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1584,
+        384
+      ],
+      "id": "4002db34-513a-4b4c-a52d-f8d3e31f26ca",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "# Transcripcion de archivos\n## imagenes, texto. audio",
+        "height": 672,
+        "width": 1152,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        384,
+        112
+      ],
+      "id": "42bbbc81-7ce4-4068-a4d3-041283ac7ce7",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5ee0d23-ddbc-4b3a-96af-4cad650b1de3",
+              "name": "wa_id",
+              "value": "={{ $json.contacts[0].wa_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e5212094-1c63-414d-aac1-cebbae1f9f34",
+              "name": "type",
+              "value": "={{ $json.messages[0].type }}",
+              "type": "string"
+            },
+            {
+              "id": "22b82720-3284-4557-a8dc-b2839e22d156",
+              "name": "metadata.phone_number_id",
+              "value": "={{ $json.metadata.phone_number_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b764963b-8042-48d0-a07b-9fbc647f1b1f",
+              "name": "messaging_product",
+              "value": "={{ $json.messaging_product }}",
+              "type": "string"
+            },
+            {
+              "id": "e1aa7c55-50ca-4f73-8e2d-824d4c4f7f8d",
+              "name": "metadata",
+              "value": "={{ $json.metadata }}",
+              "type": "object"
+            },
+            {
+              "id": "33d9527b-e061-4c08-9f60-7c603f49d473",
+              "name": "contacts",
+              "value": "={{ $json.contacts }}",
+              "type": "array"
+            },
+            {
+              "id": "86c2ee5f-b876-44ca-be96-65f918c3f120",
+              "name": "messages",
+              "value": "={{ $json.messages }}",
+              "type": "array"
+            },
+            {
+              "id": "a36621e0-d7d8-4326-ae11-4f121db653cc",
+              "name": "field",
+              "value": "={{ $json.field }}",
+              "type": "string"
+            },
+            {
+              "id": "41012fec-e460-4745-a219-4e6a85338223",
+              "name": "sessionid",
+              "value": "={{ $json.messages[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "ff5e756a-171e-49d3-9d21-7ff6cbff496e",
+              "name": "date_time",
+              "value": "={{ $json.messages[0].timestamp.toDateTime('s').toLocal() }}",
+              "type": "string"
+            },
+            {
+              "id": "91a955c2-1e51-4f96-8b49-21b5650beccc",
+              "name": "airtable_format",
+              "value": "={{$json.messages[0].timestamp.toDateTime('s').format('DD')}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        544
+      ],
+      "id": "51c26ac1-253e-4312-a4d2-d4398fd4b988",
+      "name": "data_extraction1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        464,
+        624
+      ],
+      "id": "1db6a5c2-fd0f-46b2-a688-24e6ee95a31b",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        464,
+        816
+      ],
+      "id": "37756cf4-b272-46d8-9fde-63d6014e73da",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "venta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f3933b07-b993-49b3-9bcf-a89073e90911"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "registro_venta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "317d967e-167d-49a6-84c1-dc3d6c10af08",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "precios_mod",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "precios_mod"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "60c4819e-7de8-4057-9114-d079bd314c62",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "info_venta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "informacion de ventas"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4a7ae45e-e2dd-4429-aa61-1d60f2f128c4",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "inventario",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "inventario"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2384,
+        352
+      ],
+      "id": "8ca8de95-e809-40f0-8e8a-5768e1741987",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener el texto desde la ruta indicada\nlet texto = $json.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\n\n// Diccionario básico de números en palabras a números\nconst numeros = {\n  \"cero\": 0,\n  \"uno\": 1, \"una\": 1,\n  \"dos\": 2,\n  \"tres\": 3,\n  \"cuatro\": 4,\n  \"cinco\": 5,\n  \"seis\": 6,\n  \"siete\": 7,\n  \"ocho\": 8,\n  \"nueve\": 9,\n  \"diez\": 10,\n  \"once\": 11,\n  \"doce\": 12,\n  \"trece\": 13,\n  \"catorce\": 14,\n  \"quince\": 15,\n  \"dieciséis\": 16, \"dieciseis\": 16,\n  \"diecisiete\": 17,\n  \"dieciocho\": 18,\n  \"diecinueve\": 19,\n  \"veinte\": 20,\n  \"veintiuno\": 21, \"veintiuna\": 21,\n  \"veintidós\": 22, \"veintidos\": 22,\n  \"veintitrés\": 23, \"veintitres\": 23,\n  \"veinticuatro\": 24,\n  \"veinticinco\": 25,\n  \"veintiséis\": 26, \"veintiseis\": 26,\n  \"veintisiete\": 27,\n  \"veintiocho\": 28,\n  \"veintinueve\": 29,\n  \"treinta\": 30,\n  \"cuarenta\": 40,\n  \"cincuenta\": 50,\n  \"sesenta\": 60,\n  \"setenta\": 70,\n  \"ochenta\": 80,\n  \"noventa\": 90\n};\n\n// Función para convertir palabras a números o símbolos\nfunction palabraANumero(palabra) {\n  palabra = palabra.toLowerCase();\n\n  // Conversión de \"punto\" a \".\"\n  if (palabra === \"punto\") {\n    return \".\";\n  }\n\n  if (numeros.hasOwnProperty(palabra)) {\n    return numeros[palabra];\n  }\n\n  // Manejo de combinaciones como \"treinta y cinco\"\n  if (palabra.includes(\" y \")) {\n    let partes = palabra.split(\" y \").map(p => p.trim());\n    if (numeros[partes[0]] && numeros[partes[1]]) {\n      return numeros[partes[0]] + numeros[partes[1]];\n    }\n  }\n\n  return palabra; // si no se reconoce, se deja igual\n}\n\n// Reemplazar en el texto\ntexto = texto.replace(/\\b([a-záéíóúñ]+(?:\\s+y\\s+[a-záéíóúñ]+)?)\\b/gi, (match) => {\n  const convertido = palabraANumero(match);\n  return convertido !== match ? convertido : match;\n});\n\nreturn { texto_convertido: texto };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        288
+      ],
+      "id": "9a5b2812-5336-4c47-91ce-25ee2a74a063",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener el texto desde la ruta indicada\nlet texto = $json.messages?.[0]?.text?.body || \"\";\n\n// Diccionario básico de números en palabras a números\nconst numeros = {\n  \"cero\": 0,\n  \"uno\": 1, \"una\": 1,\n  \"dos\": 2,\n  \"tres\": 3,\n  \"cuatro\": 4,\n  \"cinco\": 5,\n  \"seis\": 6,\n  \"siete\": 7,\n  \"ocho\": 8,\n  \"nueve\": 9,\n  \"diez\": 10,\n  \"once\": 11,\n  \"doce\": 12,\n  \"trece\": 13,\n  \"catorce\": 14,\n  \"quince\": 15,\n  \"dieciséis\": 16, \"dieciseis\": 16,\n  \"diecisiete\": 17,\n  \"dieciocho\": 18,\n  \"diecinueve\": 19,\n  \"veinte\": 20,\n  \"veintiuno\": 21, \"veintiuna\": 21,\n  \"veintidós\": 22, \"veintidos\": 22,\n  \"veintitrés\": 23, \"veintitres\": 23,\n  \"veinticuatro\": 24,\n  \"veinticinco\": 25,\n  \"veintiséis\": 26, \"veintiseis\": 26,\n  \"veintisiete\": 27,\n  \"veintiocho\": 28,\n  \"veintinueve\": 29,\n  \"treinta\": 30,\n  \"cuarenta\": 40,\n  \"cincuenta\": 50,\n  \"sesenta\": 60,\n  \"setenta\": 70,\n  \"ochenta\": 80,\n  \"noventa\": 90\n};\n\n// Función para convertir palabras a números o símbolos\nfunction palabraANumero(palabra) {\n  palabra = palabra.toLowerCase();\n\n  // Conversión de \"punto\" a \".\"\n  if (palabra === \"punto\") {\n    return \".\";\n  }\n\n  if (numeros.hasOwnProperty(palabra)) {\n    return numeros[palabra];\n  }\n\n  // Manejo de combinaciones como \"treinta y cinco\"\n  if (palabra.includes(\" y \")) {\n    let partes = palabra.split(\" y \").map(p => p.trim());\n    if (numeros[partes[0]] && numeros[partes[1]]) {\n      return numeros[partes[0]] + numeros[partes[1]];\n    }\n  }\n\n  return palabra; // si no se reconoce, se deja igual\n}\n\n// Reemplazar en el texto\ntexto = texto.replace(/\\b([a-záéíóúñ]+(?:\\s+y\\s+[a-záéíóúñ]+)?)\\b/gi, (match) => {\n  const convertido = palabraANumero(match);\n  return convertido !== match ? convertido : match;\n});\n\nreturn { texto_convertido: texto };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        480
+      ],
+      "id": "43344aa1-7ca9-4b00-a889-00cef30a0913",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4df07822-8763-486d-b9f4-8255febbd98e",
+              "name": "final_message",
+              "value": "={{ $('FInals_message_text').item.json.final_message }}",
+              "type": "string"
+            },
+            {
+              "id": "42e3e377-78a2-4771-a9db-ca9cc8cc2b94",
+              "name": "datetime",
+              "value": "={{ $('FInals_message_text').item.json.datetime }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2672,
+        -128
+      ],
+      "id": "e94ea139-b110-46c3-8995-e50e93a23049",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3040,
+        0
+      ],
+      "id": "423177b9-848d-40e3-8126-2d1efef8fbc4",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Capturamos el texto desde la propiedad correcta\nconst texto = String($input.first().json.output || '').trim();\n\n// Regex para extraer \"producto\" cantidad\nconst regex = /\"([^\"]+)\"\\s+(\\d+(?:\\.\\d+)?)/g;\n\nconst filas = [];\nlet match;\n\nwhile ((match = regex.exec(texto)) !== null) {\n  filas.push({\n    PRODUCTO: match[1].replace(/_/g, ' '),\n    CANTIDAD: parseFloat(match[2]),\n    FECHA: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' })\n  });\n}\n\nreturn filas;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3312,
+        -128
+      ],
+      "id": "b3b4cec0-a4a7-469b-9e03-4cc4cf56e062",
+      "name": "Code_ventas"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 368924617,
+          "mode": "list",
+          "cachedResultName": "LISTA_PRECIOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=368924617"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3536,
+        -128
+      ],
+      "id": "0c69c761-0718-4d74-a5bf-73d9d8cd029b",
+      "name": "Obtener_lista_precios",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos todas las ventas desde Code_ventas\nconst ventas = $('Code_ventas').all().map(item => item.json);\n\n// Obtenemos la lista de precios desde Obtener_lista_precios\nconst precios = $('Obtener_lista_precios').all().map(item => item.json);\n\n// Función para buscar el precio de un producto\nfunction buscarPrecio(nombreProducto) {\n  const nombreVenta = nombreProducto.toLowerCase().replace(/_/g, ' ').trim();\n  for (const p of precios) {\n    const nombrePrecio = p.PRODUCTO.toLowerCase().replace(/_/g, ' ').trim();\n    if (nombrePrecio === nombreVenta) {\n      return parseFloat(p.PRECIO_UNITARIO);\n    }\n  }\n  return 0; // Si no se encuentra, devuelve 0\n}\n\n// Procesamos todas las ventas\nreturn ventas.map(v => {\n  const precioUnitario = buscarPrecio(v.PRODUCTO);\n  const valorTotal = Number(v.CANTIDAD) * precioUnitario;\n  return {\n    json: {\n      PRODUCTO: v.PRODUCTO,\n      CANTIDAD: Number(v.CANTIDAD),\n      VALOR_UNITARIO: precioUnitario,\n      VALOR_TOTAL: valorTotal,\n      FECHA: v.FECHA\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3760,
+        -128
+      ],
+      "id": "28800491-9751-4b8e-b2a2-471080c09501",
+      "name": "Cruce_precio_venta"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ingreso_ventas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "CANTIDAD": "={{ $json.CANTIDAD }}",
+            "FECHA": "={{ $json.FECHA }}",
+            "VALOR_UNITARIO": "={{ $json.VALOR_UNITARIO }}",
+            "VALOR_TOTAL": "={{ $json.VALOR_TOTAL }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CANTIDAD",
+              "displayName": "CANTIDAD",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "VALOR_UNITARIO",
+              "displayName": "VALOR_UNITARIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR_TOTAL",
+              "displayName": "VALOR_TOTAL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA",
+              "displayName": "FECHA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3984,
+        -128
+      ],
+      "id": "ec057f7a-96a1-4077-8c62-2f7117f6628f",
+      "name": "Guardar_venta_en_hoja",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Clasificacion del mensaje\n",
+        "height": 720,
+        "width": 752,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        96
+      ],
+      "id": "4c8f8314-d319-4ef4-84c3-f94fb3f5ce64",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "759449937248855",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.mensaje_confirmacion }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        4432,
+        -160
+      ],
+      "id": "80a681bf-4f8a-4666-83b6-331a1d0fd9b9",
+      "name": "Send message",
+      "webhookId": "05f6ef16-0011-4f66-8220-0c8d84e8dc05",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "4Gtz5w2nlTfskWBb",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('FInals_message_text').item.json.final_message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=#ROL\nEres un asistente para un negocio de venta de arepas,chorizos, gaseosas, tinto, cigarrillos y demas. \n\n #CONTEXTO\n - La palabra \"combo\" significa: 1 chorizo y 1 arepa\n - Si el mensaje dice 2 combos y una 350 quiere decir: venta de 2 arepas, 2 chorizos y una gaseosa 350\n -Si el mensaje dice cuatro, uno punto cinco es igual a 4 1.5\n -Si el mensaje dice \n - Si el mensaje dice 3250 o 3 250 se entendera como registro de venta de 3 gaseosas 350 ml.\n - Si el mensaje dice 32.5 o 3 2.5 se entendera que es el registro de venta de 3 gaseosas 2.5 ml\n-\n\n#TAREA\n1.Cuando {{ $json.final_message }} intenta registrar una venta por ejemplo 5 arepas y dos chorizos entonse el output es \"venta\"\n ejemplo: \n\n2.Cuando {{ $json.final_message }} intenta acceder al total de ventas por ejemplo total de ventas hoy entonces el output es \"info_venta\"\n  ejemplo: \"cuanto se vendio hoy\" \"ventas de hoy\" \"ventas de esta semana\" \"ventas de agosto\" \n\n3.Cuando {{ $json.final_message }} quiere crear o modificar  el precio de un producto entonces el output es \"precios_mod\"\n ejemplo: \"el chorizo quedo a  7000\" \"la 2.5 a 8000\" o si se quiere crear \"crea los siguientes producto\" \"ingresa este producto\" \"ingresa estos productos\"\n\n4.Cuando {{ $json.final_message }} quiera ingresar productos al inventario entonces el output es \"inventario\"\nejemplo: \"ingresa al inventario 2 cajas de coca cola 350 a 120 mil\" \"se compraron 3 pacas de 2.5 a 70000\" \"entraron 3 pacas de cigarrillo mustang\" \"ingresaron 4 cajas de poker a 300000\"\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2032,
+        384
+      ],
+      "id": "08beefb0-4807-4edf-93e4-8ab5fc965ff7",
+      "name": "CLASIFICA TIPO DE ENTRADA"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.final_message }}",
+        "options": {
+          "systemMessage": "=tu labor es transformar el mensaje {{ $json.final_message }} las ventas de manera que los outputs para el siguiente nodo.\n\n#TERMINOS\n- Combo es igual a 1 chorizo y 1 arepa de queso.\nejemplo: si la venta dice 3 combos el output debe ser: \"chorizos\" 3 \"arepas de queso\" 3.\n\n- 2.5 es igual a 1 gaseosa mega 2.5\n-1 mustang es igual a 1 cigarrillo mustang\n-350 es igual a coca cola 350\n\n#FORMATO DE SALIDA\n- ejemplo: \"arepas_de_queso\" 3, \"chorizos\" 2, \"tintos\" 5, \"gaseosa_mega_2.5\" 4, cigarrillos_mustang\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2960,
+        -224
+      ],
+      "id": "b45bec71-4f67-4d49-b75c-5784bb4e6873",
+      "name": "LIMPIA MENSAJE DE VENTA"
+    },
+    {
+      "parameters": {
+        "content": "## INGRESO DE VENTAS A HOJA DE CALCULO\n",
+        "height": 1472,
+        "width": 2592,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2528,
+        -208
+      ],
+      "id": "fe15c83d-6386-4ff7-adc8-13bfc3847cd3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Nodo posterior a Guardar_venta_en_hoja\nconst ventas = items.map(item => {\n  const cantidad = Number(item.json.CANTIDAD);\n  const nombre = item.json.PRODUCTO;\n  return `- ${cantidad} ${nombre}`;\n});\n\n// Aquí usamos \\n reales, no escapados\nconst mensaje = `✅ Registro de ventas:\\n${ventas.join('\\n')}`;\n\nreturn [{\n  json: {\n    mensaje_confirmacion: mensaje\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        -160
+      ],
+      "id": "ade564db-8836-41dd-8f2e-f21b1485edf6",
+      "name": "Mensaje de confirmacion"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "759449937248855",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.mensaje_whatsapp }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        3536,
+        480
+      ],
+      "id": "9d16fb6d-8f6a-4a8f-9bd1-ffad292a55c3",
+      "name": "Send message1",
+      "webhookId": "b7faff83-bbfc-4afa-bfb5-de7512300565",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "4Gtz5w2nlTfskWBb",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ingreso_ventas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A:E"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3024,
+        480
+      ],
+      "id": "fc4fac41-b040-4464-8c55-57274d762c8b",
+      "name": "ventas_solicitadas",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tomar el mensaje desde WhatsApp Trigger con manejo de errores\nlet raw = \"\";\ntry {\n  raw = $('WhatsApp Trigger').first().json.messages[0].text.body || \"\";\n} catch (error) {\n  console.log(\"Error obteniendo mensaje de WhatsApp:\", error.message);\n  return [{ json: { error: \"No se pudo obtener el mensaje de WhatsApp\" } }];\n}\n\n// Normalizar texto mejorado (minúsculas, sin tildes, sin caracteres especiales)\nfunction normalize(str) {\n  return String(str)\n    .toLowerCase()\n    .trim()\n    .replace(/[áàäâã]/g, \"a\")\n    .replace(/[éèëê]/g, \"e\")\n    .replace(/[íìïî]/g, \"i\")\n    .replace(/[óòöôõ]/g, \"o\")\n    .replace(/[úùüû]/g, \"u\")\n    .replace(/[ñ]/g, \"n\")\n    .replace(/[ç]/g, \"c\")\n    .replace(/\\s+/g, \" \"); // Múltiples espacios a uno solo\n}\n\nconst msg = normalize(raw);\nconsole.log(\"Mensaje normalizado:\", msg);\n\n// Obtener fecha de hoy en zona horaria de Bogotá optimizada\nfunction todayInTZ(tz = \"America/Bogota\") {\n  const now = new Date();\n  const formatter = new Intl.DateTimeFormat(\"en-CA\", {\n    timeZone: tz,\n    year: \"numeric\",\n    month: \"2-digit\", \n    day: \"2-digit\",\n  });\n  \n  const [year, month, day] = formatter.format(now).split('-');\n  return new Date(Number(year), Number(month) - 1, Number(day));\n}\n\n// Función para obtener el lunes de la semana actual\nfunction getMondayOfWeek(date) {\n  const d = new Date(date);\n  const day = d.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado\n  const diff = day === 0 ? -6 : 1 - day; // Si es domingo, retroceder 6 días\n  d.setDate(d.getDate() + diff);\n  return d;\n}\n\n// Función para obtener el domingo de la semana actual\nfunction getSundayOfWeek(date) {\n  const monday = getMondayOfWeek(date);\n  const sunday = new Date(monday);\n  sunday.setDate(monday.getDate() + 6);\n  return sunday;\n}\n\nfunction addDays(date, delta) {\n  const result = new Date(date);\n  result.setDate(result.getDate() + delta);\n  return result;\n}\n\nfunction formatDDMMYYYY(date) {\n  const dd = String(date.getDate()).padStart(2, \"0\");\n  const mm = String(date.getMonth() + 1).padStart(2, \"0\");\n  const yyyy = date.getFullYear();\n  return `${dd}-${mm}-${yyyy}`;\n}\n\n// Patrones de consulta más robustos\nconst patterns = {\n  hoy: /\\b(hoy|dia de hoy|ventas de hoy|hoy ventas)\\b/,\n  ayer: /\\b(ayer|dia de ayer|ventas de ayer|ayer ventas)\\b/,\n  semana: /\\b(semana|esta semana|ventas de la semana|semana actual)\\b/,\n  semanaCompleta: /\\b(semana completa|toda la semana|semana entera)\\b/,\n  mes: /\\b(mes|este mes|ventas del mes|mes actual|ultimos 30 dias|30 dias)\\b/,\n  // Nuevos patrones\n  antier: /\\b(antier|anteayer|antes de ayer)\\b/,\n  ultimosDias: /\\b(ultimos (\\d+) dias|(\\d+) dias)\\b/\n};\n\nconst hoy = todayInTZ();\nlet tipo = \"dia\";\nlet inicio = hoy;\nlet fin = hoy;\nlet descripcion = \"Ventas de hoy\";\n\n// Lógica de interpretación mejorada\nif (patterns.ayer.test(msg)) {\n  const ayer = addDays(hoy, -1);\n  inicio = ayer;\n  fin = ayer;\n  tipo = \"dia\";\n  descripcion = \"Ventas de ayer\";\n  \n} else if (patterns.antier.test(msg)) {\n  const antier = addDays(hoy, -2);\n  inicio = antier;\n  fin = antier;\n  tipo = \"dia\";\n  descripcion = \"Ventas de antier\";\n  \n} else if (patterns.semana.test(msg)) {\n  inicio = getMondayOfWeek(hoy); // Desde el lunes de esta semana\n  fin = hoy; // Hasta hoy\n  tipo = \"semana\";\n  descripcion = \"Ventas de esta semana (lunes a hoy)\";\n  \n} else if (patterns.semanaCompleta.test(msg)) {\n  inicio = getMondayOfWeek(hoy); // Desde el lunes\n  fin = getSundayOfWeek(hoy); // Hasta el domingo (puede ser futuro)\n  if (fin > hoy) fin = hoy; // No ir más allá de hoy\n  tipo = \"semana\";\n  descripcion = \"Ventas de la semana completa\";\n  \n} else if (patterns.mes.test(msg)) {\n  inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);\n  fin = hoy;\n  tipo = \"mes\";\n  descripcion = \"Ventas del mes\";\n  \n} else if (patterns.ultimosDias.test(msg)) {\n  const match = msg.match(/(\\d+)/);\n  if (match) {\n    const dias = parseInt(match[1]);\n    if (dias > 0 && dias <= 365) { // Validar rango razonable\n      inicio = addDays(hoy, -(dias - 1));\n      fin = hoy;\n      tipo = \"rango\";\n      descripcion = `Ventas de los últimos ${dias} días`;\n    }\n  }\n} else if (patterns.hoy.test(msg)) {\n  // Explícitamente \"hoy\" (ya está configurado por defecto)\n  descripcion = \"Ventas de hoy\";\n}\n\n// Log de depuración\nconsole.log(`Interpretación: ${descripcion}`);\nconsole.log(`Período: ${formatDDMMYYYY(inicio)} al ${formatDDMMYYYY(fin)}`);\n\n// Validación de fechas\nif (inicio > hoy) {\n  console.log(\"Advertencia: Fecha de inicio en el futuro, ajustando a hoy\");\n  inicio = hoy;\n}\n\nif (fin > hoy) {\n  console.log(\"Advertencia: Fecha de fin en el futuro, ajustando a hoy\");\n  fin = hoy;\n}\n\n// Resultado con más información\nreturn [{\n  json: {\n    // Datos originales (compatibilidad)\n    queryType: tipo,\n    fechaInicio: formatDDMMYYYY(inicio),\n    fechaFin: formatDDMMYYYY(fin),\n    textoInterpretado: msg,\n    \n    // Nuevos datos\n    mensajeOriginal: raw,\n    descripcion: descripcion,\n    diasIncluidos: Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1,\n    fechaConsulta: formatDDMMYYYY(hoy),\n    \n    // Para debugging\n    debug: {\n      patronEncontrado: Object.keys(patterns).find(key => patterns[key].test(msg)) || \"hoy (default)\",\n      fechasCalculadas: {\n        inicio: inicio.toISOString().split('T')[0],\n        fin: fin.toISOString().split('T')[0]\n      }\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2736,
+        496
+      ],
+      "id": "4dc692e0-0f9a-41df-bc07-20466199d34f",
+      "name": "Interpretar_mensaje"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Solo para depurar\nconsole.log(\"Contenido de $input.first().json:\", $input.first().json);\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        384
+      ],
+      "id": "954b8888-219e-4ada-bba3-9ae8734201c0",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generador de mensaje WhatsApp para resumen de ventas - Versión corregida\nconst fechaObjetivo = $('Interpretar_mensaje').item.json.fechaInicio;\nconst todasLasVentas = $('ventas_solicitadas').all();\n\nconsole.log(\"Generando resumen para fecha: \" + fechaObjetivo);\n\n// Función para normalizar fechas a formato DD-MM-YYYY\nfunction normalizarFecha(fecha) {\n  if (!fecha) return null;\n  \n  // Si ya está en formato DD-MM-YYYY\n  if (typeof fecha === 'string' && fecha.match(/^\\d{1,2}-\\d{1,2}-\\d{4}$/)) {\n    const partes = fecha.split('-');\n    const dia = partes[0];\n    const mes = partes[1];\n    const año = partes[2];\n    return dia.padStart(2, '0') + '-' + mes.padStart(2, '0') + '-' + año;\n  }\n  \n  // Si viene en formato \"24/8/2025, 8:27:04 p. m.\"\n  if (typeof fecha === 'string' && fecha.includes('/')) {\n    try {\n      const partesFecha = fecha.split(',')[0].trim();\n      const partes = partesFecha.split('/');\n      const dia = partes[0];\n      const mes = partes[1];\n      const año = partes[2];\n      return dia.padStart(2, '0') + '-' + mes.padStart(2, '0') + '-' + año;\n    } catch (error) {\n      return null;\n    }\n  }\n  \n  return null;\n}\n\n// Función para formatear números con separadores de miles\nfunction formatearPeso(valor) {\n  return '$' + new Intl.NumberFormat('es-CO').format(valor);\n}\n\n// Función para obtener día de la semana en español\nfunction obtenerDiaSemana(fecha) {\n  const partes = fecha.split('-');\n  const dia = partes[0];\n  const mes = partes[1];\n  const año = partes[2];\n  const fechaObj = new Date(año, mes - 1, dia);\n  const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];\n  return dias[fechaObj.getDay()];\n}\n\n// Función para fecha legible corta\nfunction fechaLegibleCorta(fecha) {\n  const partes = fecha.split('-');\n  const dia = partes[0];\n  const mes = partes[1];\n  return dia + '/' + mes;\n}\n\n// Función para convertir fecha a formato legible\nfunction fechaLegible(fecha) {\n  const partes = fecha.split('-');\n  const dia = partes[0];\n  const mes = partes[1];\n  const año = partes[2];\n  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',\n                 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];\n  const diaSemana = obtenerDiaSemana(fecha);\n  const diaCapitalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);\n  return diaCapitalizado + ', ' + parseInt(dia) + ' de ' + meses[parseInt(mes)-1] + ' de ' + año;\n}\n\n// Obtener el tipo de consulta y fechas\nconst tipoConsulta = $('Interpretar_mensaje').item.json.queryType;\nconst fechaInicio = $('Interpretar_mensaje').item.json.fechaInicio;\nconst fechaFin = $('Interpretar_mensaje').item.json.fechaFin;\n// Filtrar ventas por fecha (ahora maneja rangos)\nconst fechaInicioNormalizada = normalizarFecha(fechaInicio);\nconst fechaFinNormalizada = normalizarFecha(fechaFin);\n\nconsole.log(\"Filtrando desde: \" + fechaInicioNormalizada + \" hasta: \" + fechaFinNormalizada);\n\nlet ventasFiltradas = [];\n\nfor (let i = 0; i < todasLasVentas.length; i++) {\n  const venta = todasLasVentas[i].json;\n  const fechaVenta = venta.FECHA;\n  \n  if (fechaVenta) {\n    const fechaVentaNormalizada = normalizarFecha(fechaVenta);\n    \n    // Comparar si la fecha está en el rango\n    if (fechaVentaNormalizada >= fechaInicioNormalizada && fechaVentaNormalizada <= fechaFinNormalizada) {\n      ventasFiltradas.push(venta);\n    }\n  }\n}\n\n// Procesar datos para el resumen\nlet resumenProductos = {};\nlet resumenPorDia = {}; // Nuevo: para agrupar por día\nlet valorTotalGeneral = 0;\nlet cantidadTotalProductos = 0;\n\nventasFiltradas.forEach(function(venta) {\n  const producto = venta.PRODUCTO;\n  const cantidad = parseInt(venta.CANTIDAD) || 0;\n  const valorTotal = parseFloat(venta.VALOR_TOTAL) || 0;\n  const fechaVenta = normalizarFecha(venta.FECHA);\n  \n  // Agrupar por productos (como antes)\n  if (!resumenProductos[producto]) {\n    resumenProductos[producto] = {\n      cantidad: 0,\n      valorTotal: 0\n    };\n  }\n  \n  resumenProductos[producto].cantidad += cantidad;\n  resumenProductos[producto].valorTotal += valorTotal;\n  \n  // Nuevo: Agrupar por día para reporte semanal\n  if (!resumenPorDia[fechaVenta]) {\n    resumenPorDia[fechaVenta] = 0;\n  }\n  resumenPorDia[fechaVenta] += valorTotal;\n  \n  valorTotalGeneral += valorTotal;\n  cantidadTotalProductos += cantidad;\n});\n\n// Generar mensaje de WhatsApp según el tipo de consulta\nlet mensaje = '';\n\nif (ventasFiltradas.length === 0) {\n  const titulo = tipoConsulta === 'semana' ? \n    '📊 Resumen de ventas semanal\\n📅 ' + fechaLegibleCorta(fechaInicioNormalizada) + ' al ' + fechaLegibleCorta(fechaFinNormalizada) :\n    '📊 Resumen de ventas\\n📅 ' + fechaLegible(fechaInicioNormalizada);\n    \n  mensaje = titulo + '\\nNo se registraron ventas para este período.';\n  \n} else if (tipoConsulta === 'semana' || tipoConsulta === 'mes') {\n  // FORMATO ESPECIAL PARA SEMANA/MES: Solo días y totales\n  mensaje = '📊 Resumen de ventas semanal\\n';\n  mensaje += '📅 ' + fechaLegibleCorta(fechaInicioNormalizada) + ' al ' + fechaLegibleCorta(fechaFinNormalizada) + '\\n';\n  \n  // Ordenar días por fecha\n  const diasOrdenados = Object.keys(resumenPorDia).sort();\n  \n  diasOrdenados.forEach(function(fecha) {\n    const diaSemana = obtenerDiaSemana(fecha);\n    const total = resumenPorDia[fecha];\n    mensaje += '• ' + diaSemana + ': ' + formatearPeso(total) + '\\n';\n  });\n  \n  mensaje += '💰 Total general: ' + formatearPeso(valorTotalGeneral);\n  \n} else {\n  // FORMATO NORMAL PARA DÍAS: Productos detallados\n  mensaje = '📊 Resumen de ventas\\n';\n  mensaje += '📅 ' + fechaLegible(fechaInicioNormalizada) + '\\n';\n  \n  // Ordenar productos por valor total (mayor a menor)\n  const productosArray = Object.entries(resumenProductos);\n  productosArray.sort(function(a, b) {\n    return b[1].valorTotal - a[1].valorTotal;\n  });\n  \n  // Lista de productos\n  productosArray.forEach(function(item) {\n    const producto = item[0];\n    const datos = item[1];\n    mensaje += '• ' + producto + ': ' + datos.cantidad + ' und — ' + formatearPeso(datos.valorTotal) + '\\n';\n  });\n  \n  // Total general\n  mensaje += '💰 Total general: ' + formatearPeso(valorTotalGeneral);\n}\n\nconsole.log(\"Ventas procesadas: \" + ventasFiltradas.length);\nconsole.log(\"Valor total: \" + valorTotalGeneral);\n\n// Retornar el mensaje\nreturn [\n  {\n    json: {\n      mensaje_whatsapp: mensaje,\n      tipo_consulta: tipoConsulta,\n      fecha_inicio: fechaInicioNormalizada,\n      fecha_fin: fechaFinNormalizada,\n      total_ventas: valorTotalGeneral,\n      total_productos: cantidadTotalProductos,\n      total_transacciones: ventasFiltradas.length,\n      resumen_productos: resumenProductos,\n      resumen_por_dia: resumenPorDia // Nuevo campo\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3312,
+        480
+      ],
+      "id": "8b7187da-e757-473a-8b82-0e9a877d9b9a",
+      "name": "crear_mensaje"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 368924617,
+          "mode": "list",
+          "cachedResultName": "LISTA_PRECIOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=368924617"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "PRECIO_UNITARIO": "={{ $json.PRECIO_UNITARIO }}"
+          },
+          "matchingColumns": [
+            "PRODUCTO"
+          ],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PRECIO_UNITARIO",
+              "displayName": "PRECIO_UNITARIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3312,
+        176
+      ],
+      "id": "d16797b0-84f7-4117-9a17-80ffc59409c3",
+      "name": "crea_o_actualiza_productos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "759449937248855",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.mensaje }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        3760,
+        176
+      ],
+      "id": "17ab7bac-f9c0-41b9-bd50-8197b5a8529b",
+      "name": "Send message2",
+      "webhookId": "f64890e8-a38a-4b08-b70e-b7b85535974f",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "4Gtz5w2nlTfskWBb",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener los datos del nodo de Google Sheets\nconst sheetData = $('crea_o_actualiza_productos').all();\n\n// Función para generar la respuesta\nfunction generateProductResponse(data) {\n    if (!data || data.length === 0) {\n        return {\n            mensaje: \"❌ No se pudo procesar ningún producto. Por favor, verifica el formato del mensaje.\",\n            tipo: \"error\",\n            productos_procesados: 0\n        };\n    }\n    \n    let productosCreados = [];\n    let productosActualizados = [];\n    let productosConError = [];\n    \n    // Procesar cada elemento de respuesta del sheets\n    data.forEach((item, index) => {\n        const json = item.json;\n        \n        // Verificar si hay error en la respuesta\n        if (json.error || json.PRODUCTO === 'ERROR') {\n            productosConError.push({\n                error: json.error || 'Error desconocido',\n                producto: json.PRODUCTO || 'Producto desconocido'\n            });\n            return;\n        }\n        \n        // Verificar si el producto fue creado o actualizado\n        // Esto depende de cómo esté configurado tu nodo de sheets\n        // Asumiendo que tienes campos que indican el tipo de operación\n        \n        const producto = {\n            nombre: json.PRODUCTO || json.producto || json.name,\n            precio: json.PRECIO_UNITARIO || json.precio || json.price,\n            // Detectar si fue actualización (puedes ajustar esta lógica según tu sheets)\n            esActualizacion: json.updated || json.isUpdate || false\n        };\n        \n        // Validar que tengamos datos válidos\n        if (producto.nombre && producto.precio) {\n            if (producto.esActualizacion) {\n                productosActualizados.push(producto);\n            } else {\n                productosCreados.push(producto);\n            }\n        }\n    });\n    \n    // Generar mensaje de respuesta\n    return buildResponseMessage(productosCreados, productosActualizados, productosConError);\n}\n\n// Función para construir el mensaje de respuesta\nfunction buildResponseMessage(creados, actualizados, errores) {\n    let mensaje = \"\";\n    let totalProcesados = creados.length + actualizados.length;\n    \n    // Encabezado principal\n    if (totalProcesados > 0) {\n        mensaje += \"✅ *Productos procesados exitosamente*\\n\\n\";\n    }\n    \n    // Productos creados\n    if (creados.length > 0) {\n        mensaje += \"🆕 *PRODUCTOS CREADOS:*\\n\";\n        creados.forEach((producto, index) => {\n            mensaje += `${index + 1}. ${producto.nombre} - $${formatPrice(producto.precio)}\\n`;\n        });\n        mensaje += \"\\n\";\n    }\n    \n    // Productos actualizados\n    if (actualizados.length > 0) {\n        mensaje += \"🔄 *PRODUCTOS ACTUALIZADOS:*\\n\";\n        actualizados.forEach((producto, index) => {\n            mensaje += `${index + 1}. ${producto.nombre} - $${formatPrice(producto.precio)}\\n`;\n        });\n        mensaje += \"\\n\";\n    }\n    \n    // Resumen\n    if (totalProcesados > 0) {\n        mensaje += `📊 *Resumen:*\\n`;\n        if (creados.length > 0) mensaje += `• ${creados.length} producto(s) creado(s)\\n`;\n        if (actualizados.length > 0) mensaje += `• ${actualizados.length} producto(s) actualizado(s)\\n`;\n        mensaje += `• Total procesados: ${totalProcesados}\\n`;\n    }\n    \n    // Errores si los hay\n    if (errores.length > 0) {\n        mensaje += \"\\n⚠️ *ERRORES:*\\n\";\n        errores.forEach((error, index) => {\n            mensaje += `${index + 1}. ${error.producto}: ${error.error}\\n`;\n        });\n    }\n    \n    // Si no hay productos procesados\n    if (totalProcesados === 0 && errores.length === 0) {\n        mensaje = \"❌ No se encontraron productos válidos para procesar.\\n\\n\";\n        mensaje += \"💡 *Formato correcto:*\\n\";\n        mensaje += \"• producto a precio\\n\";\n        mensaje += \"• Ejemplo: coca cola 350ml a 3000\\n\";\n        mensaje += \"• Ejemplo: arepa burguer a 7000\";\n    }\n    \n    return {\n        mensaje: mensaje.trim(),\n        tipo: totalProcesados > 0 ? \"success\" : \"error\",\n        productos_procesados: totalProcesados,\n        productos_creados: creados.length,\n        productos_actualizados: actualizados.length,\n        errores: errores.length,\n        detalles: {\n            creados: creados,\n            actualizados: actualizados,\n            errores: errores\n        }\n    };\n}\n\n// Función para formatear precios (agregar separadores de miles)\nfunction formatPrice(price) {\n    return new Intl.NumberFormat('es-CO').format(price);\n}\n\n// Función alternativa si el nodo de sheets retorna datos en formato diferente\nfunction generateResponseFromAlternativeFormat(data) {\n    if (!data || data.length === 0) {\n        return generateProductResponse([]);\n    }\n    \n    // Si los datos vienen en formato diferente, adaptarlos\n    const adaptedData = data.map(item => {\n        return {\n            json: {\n                PRODUCTO: item.PRODUCTO || item.producto || item.name,\n                PRECIO_UNITARIO: item.PRECIO_UNITARIO || item.precio || item.price,\n                updated: item.updated || item.isUpdate || false,\n                error: item.error\n            }\n        };\n    });\n    \n    return generateProductResponse(adaptedData);\n}\n\n// Ejecutar la generación de respuesta\nconsole.log('Datos recibidos del nodo sheets:', sheetData);\n\nlet response;\n\n// Intentar con el formato principal\ntry {\n    response = generateProductResponse(sheetData);\n} catch (error) {\n    console.log('Error con formato principal, intentando formato alternativo:', error);\n    \n    // Si falla, intentar con formato alternativo\n    try {\n        response = generateResponseFromAlternativeFormat(sheetData);\n    } catch (altError) {\n        console.log('Error con formato alternativo:', altError);\n        \n        // Respuesta de error genérica\n        response = {\n            mensaje: \"❌ Error interno al procesar los datos de los productos.\",\n            tipo: \"error\",\n            productos_procesados: 0,\n            error_tecnico: altError.message\n        };\n    }\n}\n\nconsole.log('Respuesta generada:', response);\n\n// Retornar la respuesta formateada\nreturn [response];\n\n/*\nEJEMPLO DE SALIDA:\n\nPara productos exitosos:\n{\n  \"mensaje\": \"✅ *Productos procesados exitosamente*\\n\\n🆕 *PRODUCTOS CREADOS:*\\n1. Coca Cola 350ml - $3,000\\n2. Arepa Burguer - $7,000\\n\\n📊 *Resumen:*\\n• 2 producto(s) creado(s)\\n• Total procesados: 2\",\n  \"tipo\": \"success\",\n  \"productos_procesados\": 2,\n  \"productos_creados\": 2,\n  \"productos_actualizados\": 0,\n  \"errores\": 0\n}\n\nPara errores:\n{\n  \"mensaje\": \"❌ No se encontraron productos válidos para procesar.\\n\\n💡 *Formato correcto:*\\n• producto a precio\\n• Ejemplo: coca cola 350ml a 3000\\n• Ejemplo: arepa burguer a 7000\",\n  \"tipo\": \"error\",\n  \"productos_procesados\": 0\n}\n*/"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3536,
+        176
+      ],
+      "id": "6960114f-47cc-48fb-9385-5ef8da556005",
+      "name": "crea_mensaje"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Switch1').item.json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=#ROL\nTu funcion es extraer productos y precios, para devolverlos en las variables PRODUCTO y PRECIO_UNITARIO\n\n#FORMATO DE SALIDA\n-cuando veas la palabra chorizo devuelve el PRODUCTO chorizos\n-cuando veas la palabra arepa,arepa de queso,arepa con queso devuelve el PRODUCTO Arepas de queso\n-Cuando veas la palabra tinto devuelve el PRODUCTO tintos\n.cuando veas frases como \"la 350\" devuelve el PRODUCTO coca cola 350"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2624,
+        176
+      ],
+      "id": "7145cf60-262f-4597-b72a-a6b89e472d2f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2944,
+        192
+      ],
+      "id": "627bc7bf-b118-4f31-9045-0a3139d3a36c",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener los datos de entrada\nconst inputData = $input.all();\n\n// Función para parsear el output y convertirlo al formato requerido\nfunction parseOutputToSheetFormat(data) {\n    const results = [];\n    \n    // Procesar cada item de entrada\n    data.forEach((item, index) => {\n        try {\n            // Obtener el texto del output\n            const outputText = item.json.output;\n            \n            if (!outputText) {\n                console.log(`Item ${index}: No se encontró campo 'output'`);\n                return;\n            }\n            \n            // Llama a la nueva función que maneja múltiples productos\n            const parsedItems = parseMultipleProductData(outputText);\n            \n            if (parsedItems.length > 0) {\n                // Agregar cada producto individual a los resultados\n                parsedItems.forEach(product => {\n                    results.push({\n                        PRODUCTO: product.PRODUCTO,\n                        PRECIO_UNITARIO: product.PRECIO_UNITARIO,\n                        item_index: index,\n                        original_output: outputText\n                    });\n                });\n            } else {\n                console.log(`Item ${index}: No se pudieron extraer datos válidos`);\n                // Agregar item con error para tracking\n                results.push({\n                    PRODUCTO: 'ERROR_PARSING',\n                    PRECIO_UNITARIO: 0,\n                    error: 'No se pudieron extraer producto y precio',\n                    original_output: outputText,\n                    item_index: index\n                });\n            }\n            \n        } catch (error) {\n            console.log(`Error procesando item ${index}:`, error.message);\n            results.push({\n                PRODUCTO: 'ERROR',\n                PRECIO_UNITARIO: 0,\n                error: error.message,\n                item_index: index\n            });\n        }\n    });\n    \n    return results;\n}\n\n// ----> FUNCIÓN MODIFICADA <----\n// Ahora esta función procesa múltiples productos en una sola cadena de texto\nfunction parseMultipleProductData(outputText) {\n    const allProducts = [];\n    // Dividir el texto en bloques de productos, cada uno separado por dos saltos de línea\n    const productBlocks = outputText.split('\\n\\n');\n\n    productBlocks.forEach(block => {\n        const lines = block.split('\\n');\n        \n        // Asume que el primer elemento es el producto y el segundo el precio\n        if (lines.length >= 2) {\n            const productNameMatch = lines[0].match(/PRODUCTO:\\s*(.*)/i);\n            const productPriceMatch = lines[1].match(/PRECIO_UNITARIO:\\s*(\\d+)/i);\n            \n            if (productNameMatch && productPriceMatch) {\n                const productName = productNameMatch[1].trim();\n                const productPrice = parseInt(productPriceMatch[1], 10);\n\n                if (productName && !isNaN(productPrice)) {\n                    allProducts.push({\n                        PRODUCTO: productName,\n                        PRECIO_UNITARIO: productPrice\n                    });\n                }\n            }\n        }\n    });\n\n    return allProducts;\n}\n\n// Función para limpiar el nombre del producto (ya no necesaria con el nuevo enfoque)\n// function cleanProductName(producto) { ... }\n\n// Ejecutar el procesamiento\nconsole.log('Datos de entrada:', JSON.stringify(inputData, null, 2));\nconst parsedResults = parseOutputToSheetFormat(inputData);\nconsole.log('Resultados parseados:', JSON.stringify(parsedResults, null, 2));\n\n// Retornar los resultados en el formato esperado\nreturn parsedResults;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3104,
+        176
+      ],
+      "id": "a75f3bdf-8bcb-4a97-882f-ccb8db3359f5",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Switch1').item.json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=# Prompt Mejorado para Extracción de Inventario\n\n## Instrucciones Principales\nAnaliza el siguiente mensaje de compra para inventario y extrae la información en formato JSON. Usa tu comprensión contextual para interpretar mensajes informales o con errores tipográficos.\n\n## Formato de Respuesta OBLIGATORIO\n```json\n{\n  \"cantidad\": [número],\n  \"producto\": \"[nombre normalizado del producto]\",\n  \"unidad_medida\": \"[cajas|pacas|unidades|botellas|litros]\",\n  \"precio\": [número total]\n}\n```\n\n## Reglas de Extracción\n\n### 1. Cantidad\n- Extrae el número de unidades compradas\n- Si no se especifica, asume 1\n- Convierte palabras a números (ej: \"cinco\" → 5)\n\n### 2. Producto\n- Usa SOLO el nombre normalizado del catálogo (ver sección de productos)\n- NO incluyas \"cajas de\", \"pacas de\", etc.\n- Normaliza variaciones y errores tipográficos\n\n### 3. Unidad de Medida\n- Identifica cómo se vende: cajas, pacas, unidades, botellas, litros\n- Si no está claro, infiere del contexto del producto\n- Valores permitidos: \"cajas\", \"pacas\", \"unidades\", \"botellas\", \"litros\"\n\n### 4. Precio\n- Extrae el valor total pagado por toda la compra\n- Si hay múltiples formatos de precio, usa el más específico\n- Convierte a número (sin símbolos de moneda)\n\n## Catálogo de Productos (Nombres Normalizados)\n\n| Variaciones en mensaje | Producto normalizado |\n|------------------------|---------------------|\n| \"coca cola 350\", \"coca 350\" | \"Coca cola 350ml\" |\n| \"4 2.5\", \"42.5\", \"4,2.5\", \"cuatro 2.5\" | \"Gaseosa Quatro 2.5 lts\" |\n| \"4 350\", \"4350\", \"4,350\", \"cuatro 350\" | \"Gaseosa Quatro 350ml\" |\n| \"4 250\", \"4250\", \"4,250\", \"cuatro 250\" | \"Gaseosa Quatro 250ml\" |\n| \"poker\", \"cajas de poker\", \"caja poker\" | \"Cerveza POKER en botella 330ml\" |\n| \"aguila\", \"cajas de aguila\", \"caja aguila\" | \"Cerveza AGUILA en botella 330ml\" |\n| \"manzana 350\" | \"Gaseosa Manzana Postobon 350ml\" |\n| \"agua\", \"botella agua\", \"botellas de agua\" | \"Botella Agua 600ml\" |\n| \"de todito\", \"detodito\", \"todito\" | \"DE TODITO\" |\n| \"aguardiente llanero\", \"aguardiente\" | \"Aguardiente llanero por botella\" |\n| \"media aguardiente\", \"1/2 aguardiente\" | \"Aguardiente llanero por 1/2\" |\n\n## Ejemplos de Procesamiento\n\n**Entrada:** \"compré 5 cajas de poker a 180000\"\n**Salida:** \n```json\n{\n  \"cantidad\": 5,\n  \"producto\": \"Cerveza POKER en botella 330ml\",\n  \"unidad_medida\": \"cajas\",\n  \"precio\": 180000\n}\n```\n\n**Entrada:** \"se ingresaron 3 pacas de 4 2.5 por $85000\"\n**Salida:**\n```json\n{\n  \"cantidad\": 3,\n  \"producto\": \"Gaseosa Quatro 2.5 lts\",\n  \"unidad_medida\": \"pacas\",\n  \"precio\": 85000\n}\n```\n\n## Manejo de Casos Especiales\n\n1. **Mensajes ambiguos**: Usa la interpretación más lógica basada en el contexto\n2. **Múltiples productos**: Procesa solo el primer producto mencionado\n3. **Errores tipográficos**: Usa coincidencia aproximada con el catálogo\n4. **Información faltante**: \n   - Cantidad faltante → 1\n   - Unidad faltante → \"unidades\"\n   - Precio faltante → 0\n\n## Mensaje a Procesar:\n{{ $('Switch1').item.json.messages[0].text.body }}\n\n---\n**IMPORTANTE**: Responde ÚNICAMENTE con el JSON válido, sin explicaciones adicionales."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2608,
+        768
+      ],
+      "id": "91e0b252-db30-4767-9af4-1399ddf544b2",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        992
+      ],
+      "id": "c1c6c6d8-2175-439e-930d-ab43da0f6ae2",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Capturamos la respuesta de Gemini y limpiamos\nlet respuestaGemini = String($input.first().json.output || '').trim();\nrespuestaGemini = respuestaGemini.replace(/```json\\n?/g, '').replace(/\\n?```/g, '').trim();\n\n// Parseamos el JSON\nlet datosExtraidos;\ntry {\n  datosExtraidos = JSON.parse(respuestaGemini);\n} catch (error) {\n  return [{ json: { error: \"No se pudo procesar la respuesta de Gemini\" } }];\n}\n\n// Preparamos los datos y validamos\nconst fila = {\n  PRODUCTO: datosExtraidos.producto,\n  UNIDAD_MEDIDA: datosExtraidos.unidad_medida || \"\",\n  CANTIDAD: parseFloat(datosExtraidos.cantidad),\n  PRECIO: parseFloat(datosExtraidos.precio || 0),\n  FECHA: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }),\n  // Agregamos validaciones\n  errores: []\n};\n\n// Validaciones específicas\nif (!fila.PRODUCTO || fila.PRODUCTO === \"\" || fila.PRODUCTO === \"null\") {\n  fila.errores.push(\"❌ No se pudo identificar el PRODUCTO\");\n}\nif (!fila.CANTIDAD || fila.CANTIDAD <= 0) {\n  fila.errores.push(\"❌ La CANTIDAD debe ser mayor a 0\");\n}\n\nreturn [{ json: fila }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3024,
+        768
+      ],
+      "id": "1026608c-5ab0-4068-a1ce-92b1a3adc9ff",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "759449937248855",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.errores[0] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        3536,
+        960
+      ],
+      "id": "2c4b64e5-7370-45f3-80f4-d5a7f622bad7",
+      "name": "Send message3",
+      "webhookId": "1def41ad-09a0-4bcd-98b4-a50b8aeb0916",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "4Gtz5w2nlTfskWBb",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1898212254,
+          "mode": "list",
+          "cachedResultName": "inventario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=1898212254"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "UNIDAD_MEDIDA": "={{ $json.UNIDAD_MEDIDA }}",
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "FECHA_ULTIMA_COMPRA": "={{ $json.FECHA_ULTIMA_COMPRA }}",
+            "STOCK_ACTUAL_UNIDADES": "={{ $json.STOCK_ACTUAL_UNIDADES }}",
+            "PRECIO_ULTIMA_COMPRA": "={{ $json.PRECIO_ULTIMA_COMPRA }}",
+            "FACTOR_UNIDADES": "={{ $json.FACTOR_UNIDADES }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UNIDAD_MEDIDA",
+              "displayName": "UNIDAD_MEDIDA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FACTOR_UNIDADES",
+              "displayName": "FACTOR_UNIDADES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "STOCK_ACTUAL_UNIDADES",
+              "displayName": "STOCK_ACTUAL_UNIDADES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PRECIO_ULTIMA_COMPRA",
+              "displayName": "PRECIO_ULTIMA_COMPRA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA_ULTIMA_COMPRA",
+              "displayName": "FECHA_ULTIMA_COMPRA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4208,
+        480
+      ],
+      "id": "3214d654-59d3-4364-b6c0-f014958556df",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1898212254,
+          "mode": "list",
+          "cachedResultName": "inventario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=1898212254"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "UNIDAD_MEDIDA": "={{ $json.UNIDAD_MEDIDA }}",
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "FECHA_ULTIMA_COMPRA": "={{ $json.FECHA_ULTIMA_COMPRA }}",
+            "STOCK_ACTUAL_UNIDADES": "={{ $json.STOCK_ACTUAL_UNIDADES }}",
+            "PRECIO_ULTIMA_COMPRA": "={{ $json.PRECIO_ULTIMA_COMPRA }}",
+            "FACTOR_UNIDADES": "={{ $json.FACTOR_UNIDADES }}"
+          },
+          "matchingColumns": [
+            "PRODUCTO"
+          ],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "UNIDAD_MEDIDA",
+              "displayName": "UNIDAD_MEDIDA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FACTOR_UNIDADES",
+              "displayName": "FACTOR_UNIDADES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "STOCK_ACTUAL_UNIDADES",
+              "displayName": "STOCK_ACTUAL_UNIDADES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PRECIO_ULTIMA_COMPRA",
+              "displayName": "PRECIO_ULTIMA_COMPRA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA_ULTIMA_COMPRA",
+              "displayName": "FECHA_ULTIMA_COMPRA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4208,
+        864
+      ],
+      "id": "de29ecc7-7240-4d9f-a64a-792f2b80bf9b",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "759449937248855",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.mensaje_confirmacion }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        4656,
+        864
+      ],
+      "id": "0fd663fb-0978-423f-bb69-e12b8e39d654",
+      "name": "Send message4",
+      "webhookId": "afcedcba-d60c-4f4d-92f0-0924f989d8ff",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "4Gtz5w2nlTfskWBb",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "759449937248855",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.mensaje }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        4656,
+        480
+      ],
+      "id": "7a7dfa61-6354-48e6-a960-4a490f754efd",
+      "name": "Send message5",
+      "webhookId": "afcedcba-d60c-4f4d-92f0-0924f989d8ff",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "4Gtz5w2nlTfskWBb",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1ea02d28-be6d-4d61-9128-3f99310bc6bb",
+              "name": "mensaje",
+              "value": "=✅ Ingreso de nuevo producto exitoso\nSe ha registrado en el inventario el ingreso de {{ $('Procesar_compra').item.json.CANTIDAD }} {{ $json.UNIDAD_MEDIDA }} de {{ $json.PRODUCTO }}\n ",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4432,
+        480
+      ],
+      "id": "18f3ccde-555a-4439-b8e6-326e5a37418c",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "52ba995c-4cc3-4773-a7d4-ed5791a2feb6",
+              "leftValue": "={{ $json.errores }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3312,
+        768
+      ],
+      "id": "37a0c8d6-6c1b-4a09-b822-7e1b35f521b8",
+      "name": "Procesar_compra"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1898212254,
+          "mode": "list",
+          "cachedResultName": "inventario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=1898212254"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "PRODUCTO",
+              "lookupValue": "={{ $json.PRODUCTO }}"
+            }
+          ]
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A:F"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3536,
+        768
+      ],
+      "id": "0e381d5f-4730-46e4-98e0-23dab6e326f8",
+      "name": "Consultar_Inventario",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Diccionario de factores por producto (normalizado a minúsculas)\nconst factores = {\n  \"cerveza poker en botella 330ml\": 30,\n  \"cerveza aguila en botella 330ml\": 30,\n  \"gaseosa manzana postobon 350ml\": 24,\n  \"botella agua 600ml\": 20,\n  \"coca cola 350ml\": 24,\n  \"gaseosa quatro 2.5 lts\": 8,\n  \"gaseosa quatro 350ml\": 24,\n  \"gaseosa quatro 250ml\": 24,\n  \"de todito\": 15,\n  \"aguardiente llanero por botella\": 12,\n  \"aguardiente llanero por 1/2\": 12\n};\n\ntry {\n  // Obtener datos de la nueva compra\n  const compra = $(\"Procesar_compra\").item.json;\n  \n  // Validación de datos de compra\n  if (!compra || !compra.PRODUCTO) {\n    throw new Error(\"Datos de compra inválidos: falta información del producto\");\n  }\n  \n  // Verificar si el producto existe en inventario\n  const productoExiste = items && items.length > 0 && items[0].json && items[0].json.PRODUCTO;\n  \n  // Datos del producto en inventario (si existe)\n  const inventario = productoExiste ? items[0].json : {};\n  \n  // Procesar datos del producto\n  const producto = compra.PRODUCTO.trim();\n  const productoLower = producto.toLowerCase();\n  const cantidadCompra = Number(compra.CANTIDAD) || 0;\n  const precioCompra = Number(compra.PRECIO) || 0;\n  \n  // Validaciones adicionales\n  if (cantidadCompra <= 0) {\n    throw new Error(\"La cantidad debe ser mayor a 0\");\n  }\n  \n  if (precioCompra < 0) {\n    throw new Error(\"El precio no puede ser negativo\");\n  }\n  \n  // Factor de unidades (primero buscar en diccionario, luego en inventario)\n  const factorUnidades = factores[productoLower] || Number(inventario.FACTOR_UNIDADES) || 1;\n  \n  // Stock actual\n  const stockActual = Number(inventario.STOCK_ACTUAL_UNIDADES) || 0;\n  \n  // Calcular unidades ingresadas\n  const unidadesIngresadas = cantidadCompra * factorUnidades;\n  \n  // Calcular nuevo stock\n  const nuevoStock = stockActual + unidadesIngresadas;\n  \n  // Fecha actual en zona horaria de Colombia\n  const fechaActual = new Date().toLocaleString('es-CO', { \n    timeZone: 'America/Bogota',\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n    hour: '2-digit',\n    minute: '2-digit',\n    second: '2-digit'\n  });\n  \n  // Determinar acción\n  const accion = stockActual === 0 ? \"crear\" : \"actualizar\";\n  \n  // Log para debugging (opcional)\n  console.log(`Procesando: ${producto} - Cantidad: ${cantidadCompra} - Factor: ${factorUnidades} - Unidades: ${unidadesIngresadas}`);\n  \n  // Retornar resultado\n  return [{\n    json: {\n      PRODUCTO: producto,\n      UNIDAD_MEDIDA: compra.UNIDAD_MEDIDA || \"cajas\",\n      FACTOR_UNIDADES: factorUnidades,\n      CANTIDAD: cantidadCompra,\n      STOCK_ACTUAL_UNIDADES: nuevoStock,\n      PRECIO_ULTIMA_COMPRA: precioCompra,\n      FECHA_ULTIMA_COMPRA: fechaActual,\n      UNIDADES_INGRESADAS: unidadesIngresadas, // Campo adicional útil\n      STOCK_ANTERIOR: stockActual, // Campo adicional para auditoría\n      accion: accion\n    }\n  }];\n  \n} catch (error) {\n  console.error(\"Error procesando compra:\", error.message);\n  \n  // Retornar error estructurado\n  return [{\n    json: {\n      error: true,\n      mensaje: error.message,\n      timestamp: new Date().toISOString()\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3760,
+        768
+      ],
+      "id": "d1f1b3d3-5e3a-4666-974a-13588ff919c0",
+      "name": "Calcular_Stock",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.accion }}",
+                    "rightValue": "crear",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "83998a57-c5a0-4498-b92a-823c9730b6a0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "crear_producto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cc08f081-51a5-4153-8c7a-711502a7a88b",
+                    "leftValue": "={{ $json.accion }}",
+                    "rightValue": "actualizar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "actualizar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3984,
+        768
+      ],
+      "id": "60a3d9e2-c8ae-47f1-96a7-3d823ebee234",
+      "name": "Decidir_Accion"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "243a4991-db1b-4c38-81b0-618edd24fb32",
+              "name": "=mensaje_confirmacion",
+              "value": "=♻ Actualización de inventario\nSe ingresaron correctamente {{ $('Procesar_compra').item.json.CANTIDAD }} {{ $json.UNIDAD_MEDIDA }} de {{ $json.PRODUCTO }}.\nNuevo Stock: {{ \n  Math.floor($json.STOCK_ACTUAL_UNIDADES / $json.FACTOR_UNIDADES) + \n  ' ' + $json.UNIDAD_MEDIDA + \n  ($json.STOCK_ACTUAL_UNIDADES % $json.FACTOR_UNIDADES !== 0 \n    ? ' y ' + ($json.STOCK_ACTUAL_UNIDADES % $json.FACTOR_UNIDADES) + ' unidades' \n    : '') \n}} de {{ $json.PRODUCTO }}\nFECHA: {{ $json.FECHA_ULTIMA_COMPRA }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4432,
+        864
+      ],
+      "id": "abbe22d5-34bb-41bb-9f40-704c5379a1aa",
+      "name": "Edit Fields2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "data_extraction1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CLASIFICA TIPO DE ENTRADA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "CLASIFICA TIPO DE ENTRADA",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Download media",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download media": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FInals_message_text": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final_message_audio": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "data_extraction1": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "FInals_message_text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Final_message_audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Interpretar_mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "LIMPIA MENSAJE DE VENTA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LIMPIA MENSAJE DE VENTA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code_ventas": {
+      "main": [
+        [
+          {
+            "node": "Obtener_lista_precios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener_lista_precios": {
+      "main": [
+        [
+          {
+            "node": "Cruce_precio_venta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cruce_precio_venta": {
+      "main": [
+        [
+          {
+            "node": "Guardar_venta_en_hoja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar_venta_en_hoja": {
+      "main": [
+        [
+          {
+            "node": "Mensaje de confirmacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CLASIFICA TIPO DE ENTRADA": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LIMPIA MENSAJE DE VENTA": {
+      "main": [
+        [
+          {
+            "node": "Code_ventas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensaje de confirmacion": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ventas_solicitadas": {
+      "main": [
+        [
+          {
+            "node": "crear_mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "CLASIFICA TIPO DE ENTRADA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar_mensaje": {
+      "main": [
+        [
+          {
+            "node": "ventas_solicitadas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crear_mensaje": {
+      "main": [
+        [
+          {
+            "node": "Send message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crea_o_actualiza_productos": {
+      "main": [
+        [
+          {
+            "node": "crea_mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crea_mensaje": {
+      "main": [
+        [
+          {
+            "node": "Send message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "crea_o_actualiza_productos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Procesar_compra",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Send message5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar_compra": {
+      "main": [
+        [
+          {
+            "node": "Consultar_Inventario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar_Inventario": {
+      "main": [
+        [
+          {
+            "node": "Calcular_Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular_Stock": {
+      "main": [
+        [
+          {
+            "node": "Decidir_Accion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decidir_Accion": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Send message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bogota",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "1f898966-2e1f-4aa3-81f3-c088b9ac231b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "07f67ec32baaad4ae3d75f4e22d6ad4d1aa561c2ad8388f49ad7031ee0fe8de1"
+  },
+  "id": "ydoO2AlY2ZvJqDz8",
+  "tags": []
+}
