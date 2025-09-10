@@ -1,0 +1,1896 @@
+{
+  "name": "Venta_Negocio TELEGRAM 2",
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        384
+      ],
+      "id": "763950de-a2fe-4a60-8eec-1c1e74252b82",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Transcripcion de archivos\n## imagenes, texto. audio",
+        "height": 112,
+        "width": 1040,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -224
+      ],
+      "id": "da3a467a-b8f9-4bb9-bca2-8142c86e68dc",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.categoria }}",
+                    "rightValue": "venta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f3933b07-b993-49b3-9bcf-a89073e90911"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "registro_venta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "317d967e-167d-49a6-84c1-dc3d6c10af08",
+                    "leftValue": "={{ $json.categoria }}",
+                    "rightValue": "precios_mod",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "precios_mod"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "60c4819e-7de8-4057-9114-d079bd314c62",
+                    "leftValue": "={{ $json.categoria }}",
+                    "rightValue": "info_venta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "informacion de ventas"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2176,
+        144
+      ],
+      "id": "8bd0a98c-5233-4a21-a457-39e02a065e64",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4df07822-8763-486d-b9f4-8255febbd98e",
+              "name": "final_message",
+              "value": "={{ $('Merge1').item.json.final_message }}",
+              "type": "string"
+            },
+            {
+              "id": "42e3e377-78a2-4771-a9db-ca9cc8cc2b94",
+              "name": "datetime",
+              "value": "={{ $('Merge1').item.json.datetime }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2384,
+        -128
+      ],
+      "id": "bd5d0497-6621-451f-bdf7-16adf2e71a00",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2928,
+        -112
+      ],
+      "id": "d10a10db-02b8-4c2f-b75f-c5b11acb48b9",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Capturamos el texto desde la propiedad correcta\nconst texto = String($input.first().json.output || '').trim();\n\n// Regex para extraer \"producto\" cantidad\nconst regex = /\"([^\"]+)\"\\s+(\\d+(?:\\.\\d+)?)/g;\n\nconst filas = [];\nlet match;\n\nwhile ((match = regex.exec(texto)) !== null) {\n  filas.push({\n    PRODUCTO: match[1].replace(/_/g, ' '),\n    CANTIDAD: parseFloat(match[2]),\n    FECHA: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' })\n  });\n}\n\nreturn filas;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3104,
+        -128
+      ],
+      "id": "dbb17b0f-30ca-4219-877a-d2a9fa1a0fca",
+      "name": "Code_ventas"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 368924617,
+          "mode": "list",
+          "cachedResultName": "LISTA_PRECIOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=368924617"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3328,
+        -128
+      ],
+      "id": "054ec04a-be50-46a3-b1ac-6d669b2f463e",
+      "name": "Obtener_lista_precios",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos todas las ventas desde Code_ventas\nconst ventas = $('Code_ventas').all().map(item => item.json);\n\n// Obtenemos la lista de precios desde Obtener_lista_precios\nconst precios = $('Obtener_lista_precios').all().map(item => item.json);\n\n// Función para buscar el precio de un producto\nfunction buscarPrecio(nombreProducto) {\n  const nombreVenta = nombreProducto.toLowerCase().replace(/_/g, ' ').trim();\n  for (const p of precios) {\n    const nombrePrecio = p.PRODUCTO.toLowerCase().replace(/_/g, ' ').trim();\n    if (nombrePrecio === nombreVenta) {\n      return parseFloat(p.PRECIO_UNITARIO);\n    }\n  }\n  return 0; // Si no se encuentra, devuelve 0\n}\n\n// Procesamos todas las ventas\nreturn ventas.map(v => {\n  const precioUnitario = buscarPrecio(v.PRODUCTO);\n  const valorTotal = Number(v.CANTIDAD) * precioUnitario;\n  return {\n    json: {\n      PRODUCTO: v.PRODUCTO,\n      CANTIDAD: Number(v.CANTIDAD),\n      VALOR_UNITARIO: precioUnitario,\n      VALOR_TOTAL: valorTotal,\n      FECHA: v.FECHA\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3552,
+        -128
+      ],
+      "id": "bd0fe2b2-24d2-49b5-b0bf-6992951d0079",
+      "name": "Cruce_precio_venta"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ingreso_ventas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "CANTIDAD": "={{ $json.CANTIDAD }}",
+            "FECHA": "={{ $json.FECHA }}",
+            "VALOR_UNITARIO": "={{ $json.VALOR_UNITARIO }}",
+            "VALOR_TOTAL": "={{ $json.VALOR_TOTAL }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CANTIDAD",
+              "displayName": "CANTIDAD",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "VALOR_UNITARIO",
+              "displayName": "VALOR_UNITARIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR_TOTAL",
+              "displayName": "VALOR_TOTAL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA",
+              "displayName": "FECHA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3776,
+        -128
+      ],
+      "id": "7096817f-551e-44ff-bb56-88e92cf0b72b",
+      "name": "Guardar_venta_en_hoja",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Clasificacion del mensaje\n",
+        "height": 80,
+        "width": 992,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        16
+      ],
+      "id": "3fa76612-792b-4526-ae7e-7cfc9c80c578",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.final_message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# CLASIFICADOR DE MENSAJES PARA NEGOCIO DE AREPAS\n\n## ROL\nEres un clasificador automático para un negocio que vende arepas, chorizos, gaseosas, tinto y cigarrillos.\n\n## OBJETIVO\nAnaliza el mensaje entrante y devuelve **ÚNICAMENTE** una de estas tres palabras:\n- `venta`\n- `info_venta`  \n- `precios_mod`\n\n## REGLAS DE CLASIFICACIÓN\n\n### CATEGORÍA: venta\n**Cuándo usar:** El mensaje registra productos vendidos\n**Ejemplos:**\n- \"5 arepas y dos chorizos\"\n- \"2 combos y una 350\"\n- \"vendi 3 chorizos\"\n- \"3250\" (3 gaseosas 350ml)\n- \"32.5\" (3 gaseosas 2.5L)\n\n### CATEGORÍA: info_venta\n**Cuándo usar:** El mensaje pide información sobre ventas realizadas\n**Ejemplos:**\n- \"cuánto se vendió hoy\"\n- \"ventas de esta semana\"\n- \"total del día\"\n- \"ventas de agosto\"\n- \"reporte de ventas\"\n\n### CATEGORÍA: precios_mod\n**Cuándo usar:** El mensaje modifica o crea precios de productos\n**Ejemplos:**\n- \"el chorizo quedó a 7000\"\n- \"350 a 3500\"\n- \"la 2.5 a 8000\"\n- \"crea los siguientes productos\"\n- \"cambiar precio del tinto\"\n\n## GLOSARIO INTERNO\n- **combo** = 1 chorizo + 1 arepa\n- **350** = gaseosa 350ml\n- **2.5** = gaseosa 2.5L\n- **\"3250\"** = 3 gaseosas 350ml\n- **\"32.5\"** = 3 gaseosas 2.5L\n- **\"cuatro, uno punto cinco\"** = 4 gaseosas 1.5L\n\n## INSTRUCCIÓN FINAL\nAnaliza este mensaje: {{ $json.final_message }}\n\nResponde solo con la categoría correspondiente (sin comillas, sin explicaciones).\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1600,
+        160
+      ],
+      "id": "c96bc9aa-ed35-4e1e-87ba-50da1c47866c",
+      "name": "CLASIFICA TIPO DE ENTRADA"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.final_message }}",
+        "options": {
+          "systemMessage": "=# INSTRUCCIONES PARA TRANSFORMAR VENTAS\nTu labor es transformar el mensaje {{ $json.final_message }} de ventas siguiendo **EXACTAMENTE** el formato especificado.\n\n## TÉRMINOS Y CONVERSIONES\n### Productos básicos:\n| Entrada | Salida exacta |\n|---------|---------------|\n| combo/combos | \"Chorizos\" + \"Arepas de queso\" (1 de cada uno) |\n| 2.5 | \"Gaseosas MEGA 2.5\" |\n| 350 | \"Gaseosas 350ml\" |\n| 250 | \"Gaseosas 250ml\" |\n| chorizo/chorizos | \"Chorizos\" |\n| arepa/arepas/arepas con queso | \"Arepas de queso\" |\n| mustang | \"Cigarrillos Mustang\" |\n| tinto/tintos | \"Tintos\" |\n\n### Casos especiales - Números unidos:\n- **Patrón:** Cuando encuentres un número de 4 dígitos donde los primeros dígitos representan cantidad y los últimos el tipo de gaseosa:\n  - \"3250\" o \"3 250\" = 3 \"Gaseosas 250ml\"\n  - \"2350\" o \"2 350\" = 2 \"Gaseosas 350ml\" \n  - \"4350\" o \"4 350\" = 4 \"Gaseosas 350ml\"\n  - \"5250\" o \"5 250\" = 5 \"Gaseosas 250ml\"\n\n- **Patrón con decimales:** Cuando encuentres números con formato X2.5:\n  - \"32.5\" o \"3 2.5\" = 3 \"Gaseosas MEGA 2.5\"\n  - \"22.5\" o \"2 2.5\" = 2 \"Gaseosas MEGA 2.5\"\n  - \"52.5\" o \"5 2.5\" = 5 \"Gaseosas MEGA 2.5\"\n\n### Ejemplos de conversión:\n- **Entrada:** \"3 combos\" \n- **Salida:** \"Chorizos\" 3, \"Arepas de queso\" 3\n- **Entrada:** \"2 combos y una 2.5\"\n- **Salida:** \"Chorizos\" 2, \"Arepas de queso\" 2, \"Gaseosa MEGA 2.5\" 1\n- **Entrada:** \"2350\"\n- **Salida:** \"Gaseosas 350ml\" 2\n- **Entrada:** \"32.5\"\n- **Salida:** \"Gaseosas MEGA 2.5\" 3\n\n## FORMATO DE SALIDA OBLIGATORIO\n**ESTRUCTURA:** \"NombreProducto\" cantidad, \"NombreProducto\" cantidad\n\n**REGLAS ESTRICTAS:**\n1. Cada producto entre comillas dobles: \"Chorizos\"\n2. Espacio después de las comillas: \"Chorizos\" 3\n3. Coma y espacio entre productos: , \"\n4. NO agregar saltos de línea (\\n)\n5. NO cambiar mayúsculas/minúsculas de los nombres de productos\n\n## EJEMPLOS COMPLETOS:\n**Entrada:** \"4 combos 2 tintos y una 2.5\"\n**Salida:** \"Chorizos\" 4, \"Arepas de queso\" 4, \"Tintos\" 2, \"Gaseosas MEGA 2.5\" 1\n\n**Entrada:** \"3 arepas y 2 350\"\n**Salida:** \"Arepas de queso\" 3, \"Gaseosas 350ml\" 2\n\n**Entrada:** \"32.5\"\n**Salida:** \"Gaseosas MEGA 2.5\" 3\n\n**Entrada:** \"2350 y un combo\"\n**Salida:** \"Gaseosas 350ml\" 2, \"Chorizos\" 1, \"Arepas de queso\" 1\n\n**Entrada:** \"4250 y 22.5\"\n**Salida:** \"Gaseosas 250ml\" 4, \"Gaseosas MEGA 2.5\" 2\n\n## IMPORTANTE:\n- Devuelve ÚNICAMENTE el formato de salida especificado\n- NO agregues explicaciones\n- NO agregues saltos de línea\n- RESPETA exactamente las comillas y espacios"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2592,
+        -128
+      ],
+      "id": "4cc13e9a-b7fc-454e-8402-22f1840694b2",
+      "name": "LIMPIA MENSAJE DE VENTA"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ingreso_ventas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A:E"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2624,
+        448
+      ],
+      "id": "e736f6ca-a7a9-4069-88ee-057ad6037093",
+      "name": "ventas_solicitadas",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tomar el mensaje desde Telegram Trigger con manejo de errores\nlet raw = \"\";\ntry {\n  raw = $('Code2').first().json.final_message || \"\";\n} catch (error) {\n  console.log(\"Error obteniendo mensaje de Telegram:\", error.message);\n  return [{ json: { error: \"No se pudo obtener el mensaje de Telegram\" } }];\n}\n\n// Normalizar texto mejorado (minúsculas, sin tildes, sin caracteres especiales)\nfunction normalize(str) {\n  return String(str)\n    .toLowerCase()\n    .trim()\n    .replace(/[áàäâã]/g, \"a\")\n    .replace(/[éèëê]/g, \"e\")\n    .replace(/[íìïî]/g, \"i\")\n    .replace(/[óòöôõ]/g, \"o\")\n    .replace(/[úùüû]/g, \"u\")\n    .replace(/[ñ]/g, \"n\")\n    .replace(/[ç]/g, \"c\")\n    .replace(/\\s+/g, \" \"); // Múltiples espacios a uno solo\n}\n\nconst msg = normalize(raw);\nconsole.log(\"Mensaje normalizado:\", msg);\n\n// Obtener fecha de hoy en zona horaria de Bogotá optimizada\nfunction todayInTZ(tz = \"America/Bogota\") {\n  const now = new Date();\n  const formatter = new Intl.DateTimeFormat(\"en-CA\", {\n    timeZone: tz,\n    year: \"numeric\",\n    month: \"2-digit\",\n    day: \"2-digit\",\n  });\n  \n  const [year, month, day] = formatter.format(now).split('-');\n  return new Date(Number(year), Number(month) - 1, Number(day));\n}\n\n// Función para obtener el lunes de la semana actual\nfunction getMondayOfWeek(date) {\n  const d = new Date(date);\n  const day = d.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado\n  const diff = day === 0 ? -6 : 1 - day; // Si es domingo, retroceder 6 días\n  d.setDate(d.getDate() + diff);\n  return d;\n}\n\n// Función para obtener el domingo de la semana actual\nfunction getSundayOfWeek(date) {\n  const monday = getMondayOfWeek(date);\n  const sunday = new Date(monday);\n  sunday.setDate(monday.getDate() + 6);\n  return sunday;\n}\n\nfunction addDays(date, delta) {\n  const result = new Date(date);\n  result.setDate(result.getDate() + delta);\n  return result;\n}\n\nfunction formatDDMMYYYY(date) {\n  const dd = String(date.getDate()).padStart(2, \"0\");\n  const mm = String(date.getMonth() + 1).padStart(2, \"0\");\n  const yyyy = date.getFullYear();\n  return `${dd}-${mm}-${yyyy}`;\n}\n\n// Patrones de consulta más robustos\nconst patterns = {\n  hoy: /\\b(hoy|dia de hoy|ventas de hoy|hoy ventas)\\b/,\n  ayer: /\\b(ayer|dia de ayer|ventas de ayer|ayer ventas)\\b/,\n  semana: /\\b(semana|esta semana|ventas de la semana|semana actual)\\b/,\n  semanaCompleta: /\\b(semana completa|toda la semana|semana entera)\\b/,\n  mes: /\\b(mes|este mes|ventas del mes|mes actual|ultimos 30 dias|30 dias)\\b/,\n  // Nuevos patrones\n  antier: /\\b(antier|anteayer|antes de ayer)\\b/,\n  ultimosDias: /\\b(ultimos (\\d+) dias|(\\d+) dias)\\b/\n};\n\nconst hoy = todayInTZ();\nlet tipo = \"dia\";\nlet inicio = hoy;\nlet fin = hoy;\nlet descripcion = \"Ventas de hoy\";\n\n// Lógica de interpretación mejorada\nif (patterns.ayer.test(msg)) {\n  const ayer = addDays(hoy, -1);\n  inicio = ayer;\n  fin = ayer;\n  tipo = \"dia\";\n  descripcion = \"Ventas de ayer\";\n  \n} else if (patterns.antier.test(msg)) {\n  const antier = addDays(hoy, -2);\n  inicio = antier;\n  fin = antier;\n  tipo = \"dia\";\n  descripcion = \"Ventas de antier\";\n  \n} else if (patterns.semana.test(msg)) {\n  inicio = getMondayOfWeek(hoy); // Desde el lunes de esta semana\n  fin = hoy; // Hasta hoy\n  tipo = \"semana\";\n  descripcion = \"Ventas de esta semana (lunes a hoy)\";\n  \n} else if (patterns.semanaCompleta.test(msg)) {\n  inicio = getMondayOfWeek(hoy); // Desde el lunes\n  fin = getSundayOfWeek(hoy); // Hasta el domingo (puede ser futuro)\n  if (fin > hoy) fin = hoy; // No ir más allá de hoy\n  tipo = \"semana\";\n  descripcion = \"Ventas de la semana completa\";\n  \n} else if (patterns.mes.test(msg)) {\n  inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);\n  fin = hoy;\n  tipo = \"mes\";\n  descripcion = \"Ventas del mes\";\n  \n} else if (patterns.ultimosDias.test(msg)) {\n  const match = msg.match(/(\\d+)/);\n  if (match) {\n    const dias = parseInt(match[1]);\n    if (dias > 0 && dias <= 365) { // Validar rango razonable\n      inicio = addDays(hoy, -(dias - 1));\n      fin = hoy;\n      tipo = \"rango\";\n      descripcion = `Ventas de los últimos ${dias} días`;\n    }\n  }\n} else if (patterns.hoy.test(msg)) {\n  // Explícitamente \"hoy\" (ya está configurado por defecto)\n  descripcion = \"Ventas de hoy\";\n}\n\n// Log de depuración\nconsole.log(`Interpretación: ${descripcion}`);\nconsole.log(`Período: ${formatDDMMYYYY(inicio)} al ${formatDDMMYYYY(fin)}`);\n\n// Validación de fechas\nif (inicio > hoy) {\n  console.log(\"Advertencia: Fecha de inicio en el futuro, ajustando a hoy\");\n  inicio = hoy;\n}\n\nif (fin > hoy) {\n  console.log(\"Advertencia: Fecha de fin en el futuro, ajustando a hoy\");\n  fin = hoy;\n}\n\n// Resultado con más información\nreturn [{\n  json: {\n    // Datos originales (compatibilidad)\n    queryType: tipo,\n    fechaInicio: formatDDMMYYYY(inicio),\n    fechaFin: formatDDMMYYYY(fin),\n    textoInterpretado: msg,\n    \n    // Nuevos datos\n    mensajeOriginal: raw,\n    descripcion: descripcion,\n    diasIncluidos: Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1,\n    fechaConsulta: formatDDMMYYYY(hoy),\n    \n    // Para debugging\n    debug: {\n      patronEncontrado: Object.keys(patterns).find(key => patterns[key].test(msg)) || \"hoy (default)\",\n      fechasCalculadas: {\n        inicio: inicio.toISOString().split('T')[0],\n        fin: fin.toISOString().split('T')[0]\n      }\n    }\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2416,
+        448
+      ],
+      "id": "b1bfa359-70a0-4cd8-9760-1c311cc14a6b",
+      "name": "Interpretar_mensaje"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generador de mensaje WhatsApp para resumen de ventas - Versión corregida\nconst fechaObjetivo = $('Interpretar_mensaje').item.json.fechaInicio;\nconst todasLasVentas = $('ventas_solicitadas').all();\n\nconsole.log(\"Generando resumen para fecha: \" + fechaObjetivo);\n\n// Función para normalizar fechas a formato DD-MM-YYYY\nfunction normalizarFecha(fecha) {\n  if (!fecha) return null;\n  \n  // Si ya está en formato DD-MM-YYYY\n  if (typeof fecha === 'string' && fecha.match(/^\\d{1,2}-\\d{1,2}-\\d{4}$/)) {\n    const partes = fecha.split('-');\n    const dia = partes[0];\n    const mes = partes[1];\n    const año = partes[2];\n    return dia.padStart(2, '0') + '-' + mes.padStart(2, '0') + '-' + año;\n  }\n  \n  // Si viene en formato \"24/8/2025, 8:27:04 p. m.\"\n  if (typeof fecha === 'string' && fecha.includes('/')) {\n    try {\n      const partesFecha = fecha.split(',')[0].trim();\n      const partes = partesFecha.split('/');\n      const dia = partes[0];\n      const mes = partes[1];\n      const año = partes[2];\n      return dia.padStart(2, '0') + '-' + mes.padStart(2, '0') + '-' + año;\n    } catch (error) {\n      return null;\n    }\n  }\n  \n  return null;\n}\n\n// Función para formatear números con separadores de miles\nfunction formatearPeso(valor) {\n  return '$' + new Intl.NumberFormat('es-CO').format(valor);\n}\n\n// Función para obtener día de la semana en español\nfunction obtenerDiaSemana(fecha) {\n  const partes = fecha.split('-');\n  const dia = partes[0];\n  const mes = partes[1];\n  const año = partes[2];\n  const fechaObj = new Date(año, mes - 1, dia);\n  const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];\n  return dias[fechaObj.getDay()];\n}\n\n// Función para fecha legible corta\nfunction fechaLegibleCorta(fecha) {\n  const partes = fecha.split('-');\n  const dia = partes[0];\n  const mes = partes[1];\n  return dia + '/' + mes;\n}\n\n// Función para convertir fecha a formato legible\nfunction fechaLegible(fecha) {\n  const partes = fecha.split('-');\n  const dia = partes[0];\n  const mes = partes[1];\n  const año = partes[2];\n  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',\n                 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];\n  const diaSemana = obtenerDiaSemana(fecha);\n  const diaCapitalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);\n  return diaCapitalizado + ', ' + parseInt(dia) + ' de ' + meses[parseInt(mes)-1] + ' de ' + año;\n}\n\n// Obtener el tipo de consulta y fechas\nconst tipoConsulta = $('Interpretar_mensaje').item.json.queryType;\nconst fechaInicio = $('Interpretar_mensaje').item.json.fechaInicio;\nconst fechaFin = $('Interpretar_mensaje').item.json.fechaFin;\n// Filtrar ventas por fecha (ahora maneja rangos)\nconst fechaInicioNormalizada = normalizarFecha(fechaInicio);\nconst fechaFinNormalizada = normalizarFecha(fechaFin);\n\nconsole.log(\"Filtrando desde: \" + fechaInicioNormalizada + \" hasta: \" + fechaFinNormalizada);\n\nlet ventasFiltradas = [];\n\nfor (let i = 0; i < todasLasVentas.length; i++) {\n  const venta = todasLasVentas[i].json;\n  const fechaVenta = venta.FECHA;\n  \n  if (fechaVenta) {\n    const fechaVentaNormalizada = normalizarFecha(fechaVenta);\n    \n    // Comparar si la fecha está en el rango\n    if (fechaVentaNormalizada >= fechaInicioNormalizada && fechaVentaNormalizada <= fechaFinNormalizada) {\n      ventasFiltradas.push(venta);\n    }\n  }\n}\n\n// Procesar datos para el resumen\nlet resumenProductos = {};\nlet resumenPorDia = {}; // Nuevo: para agrupar por día\nlet valorTotalGeneral = 0;\nlet cantidadTotalProductos = 0;\n\nventasFiltradas.forEach(function(venta) {\n  const producto = venta.PRODUCTO;\n  const cantidad = parseInt(venta.CANTIDAD) || 0;\n  const valorTotal = parseFloat(venta.VALOR_TOTAL) || 0;\n  const fechaVenta = normalizarFecha(venta.FECHA);\n  \n  // Agrupar por productos (como antes)\n  if (!resumenProductos[producto]) {\n    resumenProductos[producto] = {\n      cantidad: 0,\n      valorTotal: 0\n    };\n  }\n  \n  resumenProductos[producto].cantidad += cantidad;\n  resumenProductos[producto].valorTotal += valorTotal;\n  \n  // Nuevo: Agrupar por día para reporte semanal\n  if (!resumenPorDia[fechaVenta]) {\n    resumenPorDia[fechaVenta] = 0;\n  }\n  resumenPorDia[fechaVenta] += valorTotal;\n  \n  valorTotalGeneral += valorTotal;\n  cantidadTotalProductos += cantidad;\n});\n\n// Generar mensaje de WhatsApp según el tipo de consulta\nlet mensaje = '';\n\nif (ventasFiltradas.length === 0) {\n  const titulo = tipoConsulta === 'semana' ? \n    '📊 Resumen de ventas semanal\\n📅 ' + fechaLegibleCorta(fechaInicioNormalizada) + ' al ' + fechaLegibleCorta(fechaFinNormalizada) :\n    '📊 Resumen de ventas\\n📅 ' + fechaLegible(fechaInicioNormalizada);\n    \n  mensaje = titulo + '\\nNo se registraron ventas para este período.';\n  \n} else if (tipoConsulta === 'semana' || tipoConsulta === 'mes') {\n  // FORMATO ESPECIAL PARA SEMANA/MES: Solo días y totales\n  mensaje = '📊 Resumen de ventas semanal\\n';\n  mensaje += '📅 ' + fechaLegibleCorta(fechaInicioNormalizada) + ' al ' + fechaLegibleCorta(fechaFinNormalizada) + '\\n';\n  \n  // Ordenar días por fecha\n  const diasOrdenados = Object.keys(resumenPorDia).sort();\n  \n  diasOrdenados.forEach(function(fecha) {\n    const diaSemana = obtenerDiaSemana(fecha);\n    const total = resumenPorDia[fecha];\n    mensaje += '• ' + diaSemana + ': ' + formatearPeso(total) + '\\n';\n  });\n  \n  mensaje += '💰 Total general: ' + formatearPeso(valorTotalGeneral);\n  \n} else {\n  // FORMATO NORMAL PARA DÍAS: Productos detallados\n  mensaje = '📊 Resumen de ventas\\n';\n  mensaje += '📅 ' + fechaLegible(fechaInicioNormalizada) + '\\n';\n  \n  // Ordenar productos por valor total (mayor a menor)\n  const productosArray = Object.entries(resumenProductos);\n  productosArray.sort(function(a, b) {\n    return b[1].valorTotal - a[1].valorTotal;\n  });\n  \n  // Lista de productos\n  productosArray.forEach(function(item) {\n    const producto = item[0];\n    const datos = item[1];\n    mensaje += '• ' + producto + ': ' + datos.cantidad + ' und — ' + formatearPeso(datos.valorTotal) + '\\n';\n  });\n  \n  // Total general\n  mensaje += '💰 Total general: ' + formatearPeso(valorTotalGeneral);\n}\n\nconsole.log(\"Ventas procesadas: \" + ventasFiltradas.length);\nconsole.log(\"Valor total: \" + valorTotalGeneral);\n\n// Retornar el mensaje\nreturn [\n  {\n    json: {\n      mensaje_whatsapp: mensaje,\n      tipo_consulta: tipoConsulta,\n      fecha_inicio: fechaInicioNormalizada,\n      fecha_fin: fechaFinNormalizada,\n      total_ventas: valorTotalGeneral,\n      total_productos: cantidadTotalProductos,\n      total_transacciones: ventasFiltradas.length,\n      resumen_productos: resumenProductos,\n      resumen_por_dia: resumenPorDia // Nuevo campo\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2832,
+        656
+      ],
+      "id": "4eab4c1a-75fe-4a76-91b1-112f9dc60b8b",
+      "name": "crear_mensaje"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 368924617,
+          "mode": "list",
+          "cachedResultName": "LISTA_PRECIOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=368924617"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "PRECIO_UNITARIO": "={{ $json.PRECIO_UNITARIO }}"
+          },
+          "matchingColumns": [
+            "PRODUCTO"
+          ],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PRECIO_UNITARIO",
+              "displayName": "PRECIO_UNITARIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3152,
+        176
+      ],
+      "id": "9a05c426-57f4-4e8c-9776-be3225d6e4b8",
+      "name": "crea_o_actualiza_productos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener los datos del nodo de Google Sheets\nconst sheetData = $('crea_o_actualiza_productos').all();\n\n// Función para generar la respuesta\nfunction generateProductResponse(data) {\n    if (!data || data.length === 0) {\n        return {\n            mensaje: \"❌ No se pudo procesar ningún producto. Por favor, verifica el formato del mensaje.\",\n            tipo: \"error\",\n            productos_procesados: 0\n        };\n    }\n    \n    let productosValidos = [];\n    let productosConError = [];\n    \n    // Procesar cada elemento de respuesta del sheets\n    data.forEach((item, index) => {\n        const json = item.json;\n        \n        // Verificar si hay error en la respuesta\n        if (json.error || json.PRODUCTO === 'ERROR') {\n            productosConError.push({\n                error: json.error || 'Error desconocido',\n                producto: json.PRODUCTO || 'Producto desconocido'\n            });\n            return;\n        }\n        \n        const producto = {\n            nombre: json.PRODUCTO || json.producto || json.name,\n            precio: json.PRECIO_UNITARIO || json.precio || json.price\n        };\n        \n        // Validar que tengamos datos válidos\n        if (producto.nombre && producto.precio) {\n            productosValidos.push(producto);\n        }\n    });\n    \n    // Generar mensaje de respuesta\n    return buildResponseMessage(productosValidos, productosConError);\n}\n\n// Función para construir el mensaje de respuesta simplificado\nfunction buildResponseMessage(productos, errores) {\n    let mensaje = \"\";\n    \n    // Productos procesados exitosamente\n    if (productos.length > 0) {\n        mensaje += \"✅ *Productos procesados:*\\n\\n\";\n        \n        productos.forEach((producto, index) => {\n            mensaje += `${index + 1}. ${producto.nombre} - $${formatPrice(producto.precio)}\\n`;\n        });\n    }\n    \n    // Errores si los hay\n    if (errores.length > 0) {\n        if (productos.length > 0) mensaje += \"\\n\";\n        mensaje += \"⚠️ *Errores:*\\n\";\n        errores.forEach((error, index) => {\n            mensaje += `${index + 1}. ${error.producto}: ${error.error}\\n`;\n        });\n    }\n    \n    // Si no hay productos procesados\n    if (productos.length === 0 && errores.length === 0) {\n        mensaje = \"❌ No se encontraron productos válidos para procesar.\\n\\n\";\n        mensaje += \"💡 *Formato correcto:*\\n\";\n        mensaje += \"• producto a precio\\n\";\n        mensaje += \"• Ejemplo: coca cola 350ml a 3000\\n\";\n        mensaje += \"• Ejemplo: arepa burguer a 7000\";\n    }\n    \n    return {\n        mensaje: mensaje.trim(),\n        tipo: productos.length > 0 ? \"success\" : \"error\",\n        productos_procesados: productos.length,\n        errores: errores.length,\n        detalles: {\n            productos: productos,\n            errores: errores\n        }\n    };\n}\n\n// Función para formatear precios (agregar separadores de miles)\nfunction formatPrice(price) {\n    return new Intl.NumberFormat('es-CO').format(price);\n}\n\n// Función alternativa si el nodo de sheets retorna datos en formato diferente\nfunction generateResponseFromAlternativeFormat(data) {\n    if (!data || data.length === 0) {\n        return generateProductResponse([]);\n    }\n    \n    // Si los datos vienen en formato diferente, adaptarlos\n    const adaptedData = data.map(item => {\n        return {\n            json: {\n                PRODUCTO: item.PRODUCTO || item.producto || item.name,\n                PRECIO_UNITARIO: item.PRECIO_UNITARIO || item.precio || item.price,\n                error: item.error\n            }\n        };\n    });\n    \n    return generateProductResponse(adaptedData);\n}\n\n// Ejecutar la generación de respuesta\nconsole.log('Datos recibidos del nodo sheets:', sheetData);\n\nlet response;\n\n// Intentar con el formato principal\ntry {\n    response = generateProductResponse(sheetData);\n} catch (error) {\n    console.log('Error con formato principal, intentando formato alternativo:', error);\n    \n    // Si falla, intentar con formato alternativo\n    try {\n        response = generateResponseFromAlternativeFormat(sheetData);\n    } catch (altError) {\n        console.log('Error con formato alternativo:', altError);\n        \n        // Respuesta de error genérica\n        response = {\n            mensaje: \"❌ Error interno al procesar los datos de los productos.\",\n            tipo: \"error\",\n            productos_procesados: 0,\n            error_tecnico: altError.message\n        };\n    }\n}\n\nconsole.log('Respuesta generada:', response);\n\n// Retornar la respuesta formateada\nreturn [response];\n\n/*\nEJEMPLO DE SALIDA SIMPLIFICADA:\n\nPara productos exitosos:\n{\n  \"mensaje\": \"✅ *Productos procesados:*\\n\\n1. Coca Cola 350ml - $3,000\\n2. Arepa Burguer - $7,000\",\n  \"tipo\": \"success\",\n  \"productos_procesados\": 2\n}\n\nPara errores:\n{\n  \"mensaje\": \"❌ No se encontraron productos válidos para procesar.\\n\\n💡 *Formato correcto:*\\n• producto a precio\\n• Ejemplo: coca cola 350ml a 3000\\n• Ejemplo: arepa burguer a 7000\",\n  \"tipo\": \"error\",\n  \"productos_procesados\": 0\n}\n*/"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        176
+      ],
+      "id": "68bbd161-d9d2-4d3b-8c54-9f25a73709c3",
+      "name": "crea_mensaje"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Code2').first().json.final_message }}",
+        "options": {
+          "systemMessage": "=#ROL\nTu funcion es extraer productos y precios, para devolverlos en las variables PRODUCTO y PRECIO_UNITARIO\n\n#TERMINOS\n- Combo es igual a 1 chorizo y 1 Arepas de queso.\nejemplo: si la venta dice 3 combos el output debe ser: \"chorizos\" 3 \"Arepas de queso\" 3.\n\n- 2.5 es igual a 1 Gaseosa MEGA  2.5\n-1 mustang es igual a 1 cigarrillo mustang\n-350 es igual a Gaseosa 350ml\n-chorizo o chorizos es igual a Chorizos\n\n| 2.5 | Gaseosa MEGA 2.5 |\n| 350 | Gaseosa 350ml |\n| 250 | Gaseosa 250ml |\n| arepa/arepas/arepas con queso | Arepas de queso |\n| mustang | Cigarrillo Mustang |\n| tinto | Tintos |\n\n**Casos especiales:**\n- \"3250\" o \"3 250\" = 3 Gaseosa 250ml\n- \"32.5\" o \"3 2.5\" = 3 Gaseosa MEGA  2.5\n\n#FORMATO DE SALIDA\nes para modificar precios de productos entonces, hazlo para que el siguiente nodo los pueda agregar a la hoja de sheets correctamente\n\nEjemplos de formatos válidos:\nUn solo producto:\n\"PRODUCTO: Chorizos\\nPRECIO_UNITARIO: 8500\"\n\nMúltiples productos:\n\"PRODUCTO: Chorizos\\nPRECIO_UNITARIO: 8500\\n\\nPRODUCTO: Arepas de queso\\nPRECIO_UNITARIO: 2200\\n\\nPRODUCTO: Tintos\\nPRECIO_UNITARIO: 1500\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2448,
+        160
+      ],
+      "id": "c0e49fa7-62d7-4703-81e5-4610d15b2243",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        176
+      ],
+      "id": "bb4834d1-b73e-4b08-9045-2c4acb090502",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener los datos de entrada\nconst inputData = $input.all();\n\n// Función para parsear el output y convertirlo al formato requerido\nfunction parseOutputToSheetFormat(data) {\n    const results = [];\n    \n    // Procesar cada item de entrada\n    data.forEach((item, index) => {\n        try {\n            // Obtener el texto del output\n            const outputText = item.json.output;\n            \n            if (!outputText) {\n                console.log(`Item ${index}: No se encontró campo 'output'`);\n                return;\n            }\n            \n            // Llama a la nueva función que maneja múltiples productos\n            const parsedItems = parseMultipleProductData(outputText);\n            \n            if (parsedItems.length > 0) {\n                // Agregar cada producto individual a los resultados\n                parsedItems.forEach(product => {\n                    results.push({\n                        PRODUCTO: product.PRODUCTO,\n                        PRECIO_UNITARIO: product.PRECIO_UNITARIO,\n                        item_index: index,\n                        original_output: outputText\n                    });\n                });\n            } else {\n                console.log(`Item ${index}: No se pudieron extraer datos válidos`);\n                // Agregar item con error para tracking\n                results.push({\n                    PRODUCTO: 'ERROR_PARSING',\n                    PRECIO_UNITARIO: 0,\n                    error: 'No se pudieron extraer producto y precio',\n                    original_output: outputText,\n                    item_index: index\n                });\n            }\n            \n        } catch (error) {\n            console.log(`Error procesando item ${index}:`, error.message);\n            results.push({\n                PRODUCTO: 'ERROR',\n                PRECIO_UNITARIO: 0,\n                error: error.message,\n                item_index: index\n            });\n        }\n    });\n    \n    return results;\n}\n\n// ----> FUNCIÓN MODIFICADA <----\n// Ahora esta función procesa múltiples productos en una sola cadena de texto\nfunction parseMultipleProductData(outputText) {\n    const allProducts = [];\n    // Dividir el texto en bloques de productos, cada uno separado por dos saltos de línea\n    const productBlocks = outputText.split('\\n\\n');\n\n    productBlocks.forEach(block => {\n        const lines = block.split('\\n');\n        \n        // Asume que el primer elemento es el producto y el segundo el precio\n        if (lines.length >= 2) {\n            const productNameMatch = lines[0].match(/PRODUCTO:\\s*(.*)/i);\n            const productPriceMatch = lines[1].match(/PRECIO_UNITARIO:\\s*(\\d+)/i);\n            \n            if (productNameMatch && productPriceMatch) {\n                const productName = productNameMatch[1].trim();\n                const productPrice = parseInt(productPriceMatch[1], 10);\n\n                if (productName && !isNaN(productPrice)) {\n                    allProducts.push({\n                        PRODUCTO: productName,\n                        PRECIO_UNITARIO: productPrice\n                    });\n                }\n            }\n        }\n    });\n\n    return allProducts;\n}\n\n// Función para limpiar el nombre del producto (ya no necesaria con el nuevo enfoque)\n// function cleanProductName(producto) { ... }\n\n// Ejecutar el procesamiento\nconsole.log('Datos de entrada:', JSON.stringify(inputData, null, 2));\nconst parsedResults = parseOutputToSheetFormat(inputData);\nconsole.log('Resultados parseados:', JSON.stringify(parsedResults, null, 2));\n\n// Retornar los resultados en el formato esperado\nreturn parsedResults;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2944,
+        176
+      ],
+      "id": "8cf8fb50-3f0e-432a-9faa-2534800ca83e",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1816b788-3db9-4d49-bee1-d0ce22bbb3e3",
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "422d9d78-f06f-4b39-856e-1dc2995dd539"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "274fb551-9220-4973-9a59-db0e80151f75",
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Imagen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0e50ec0e-9edb-4310-b491-81535dddb451",
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "sticker",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sticker"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        32,
+        320
+      ],
+      "id": "9c31707c-e33e-4ff7-bfce-3d5dd8fd54ec",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-1.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-1.5-flash"
+        },
+        "inputType": "binary",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -32
+      ],
+      "id": "df3976e3-2acd-40f9-860d-23e4bd54125b",
+      "name": "Transcribe a recording1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        256,
+        304
+      ],
+      "id": "9eac4a2e-d5a9-4c29-866f-8e3929fa4a9f",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        256,
+        496
+      ],
+      "id": "55cf57f4-18c2-4fb7-b816-c13e0d65facb",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        352
+      ],
+      "id": "2bd1ec42-0cbc-4d5c-adfc-e478817da241",
+      "name": "Telegram Trigger",
+      "webhookId": "ee5ecdeb-5ad7-4f1a-8b95-9d2f223b3716",
+      "credentials": {
+        "telegramApi": {
+          "id": "uvNQL60bF8vWU8mw",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        -32
+      ],
+      "id": "4231cfce-67b0-4637-89e1-82a43a6de0b7",
+      "name": "Get a file",
+      "webhookId": "fe3266dc-5b5f-4fd7-acbe-63055767f9ab",
+      "credentials": {
+        "telegramApi": {
+          "id": "uvNQL60bF8vWU8mw",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener el texto desde la ruta indicada\nlet texto = $json.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\n\n// Diccionario básico de números en palabras a números\nconst numeros = {\n  \"cero\": 0,\n  \"uno\": 1, \"una\": 1, \"un\": 1,\n  \"dos\": 2,\n  \"tres\": 3,\n  \"cuatro\": 4,\n  \"cinco\": 5,\n  \"seis\": 6,\n  \"siete\": 7,\n  \"ocho\": 8,\n  \"nueve\": 9,\n  \"diez\": 10,\n  \"once\": 11,\n  \"doce\": 12,\n  \"trece\": 13,\n  \"catorce\": 14,\n  \"quince\": 15,\n  \"dieciséis\": 16, \"dieciseis\": 16,\n  \"diecisiete\": 17,\n  \"dieciocho\": 18,\n  \"diecinueve\": 19,\n  \"veinte\": 20,\n  \"veintiuno\": 21, \"veintiuna\": 21,\n  \"veintidós\": 22, \"veintidos\": 22,\n  \"veintitrés\": 23, \"veintitres\": 23,\n  \"veinticuatro\": 24,\n  \"veinticinco\": 25,\n  \"veintiséis\": 26, \"veintiseis\": 26,\n  \"veintisiete\": 27,\n  \"veintiocho\": 28,\n  \"veintinueve\": 29,\n  \"treinta\": 30,\n  \"cuarenta\": 40,\n  \"cincuenta\": 50,\n  \"sesenta\": 60,\n  \"setenta\": 70,\n  \"ochenta\": 80,\n  \"noventa\": 90\n};\n\n// Función para convertir palabras a números o símbolos\nfunction palabraANumero(palabra) {\n  palabra = palabra.toLowerCase();\n\n  // Conversión de \"punto\" a \".\"\n  if (palabra === \"punto\") {\n    return \".\";\n  }\n\n  if (numeros.hasOwnProperty(palabra)) {\n    return numeros[palabra];\n  }\n\n  // Manejo de combinaciones como \"treinta y cinco\"\n  if (palabra.includes(\" y \")) {\n    let partes = palabra.split(\" y \").map(p => p.trim());\n    if (numeros[partes[0]] && numeros[partes[1]]) {\n      return numeros[partes[0]] + numeros[partes[1]];\n    }\n  }\n\n  return palabra; // si no se reconoce, se deja igual\n}\n\n// Reemplazar en el texto\ntexto = texto.replace(/\\b([a-záéíóúñ]+(?:\\s+y\\s+[a-záéíóúñ]+)?)\\b/gi, (match) => {\n  const convertido = palabraANumero(match);\n  return convertido !== match ? convertido : match;\n});\n\nreturn { texto_convertido: texto };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        -32
+      ],
+      "id": "8b6ec9a9-3969-45ec-a708-e013b4fbd40b",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener el texto desde la primera entrada del nodo\nlet texto = $input.first().json?.message?.text || \"\";\n\nconsole.log(\"Texto original:\", texto);\n\n// Diccionario básico de números en palabras a números\nconst numeros = {\n  \"cero\": 0,\n  \"uno\": 1, \"una\": 1, \"un\": 1,\n  \"dos\": 2,\n  \"tres\": 3,\n  \"cuatro\": 4,\n  \"cinco\": 5,\n  \"seis\": 6,\n  \"siete\": 7,\n  \"ocho\": 8,\n  \"nueve\": 9,\n  \"diez\": 10,\n  \"once\": 11,\n  \"doce\": 12,\n  \"trece\": 13,\n  \"catorce\": 14,\n  \"quince\": 15,\n  \"dieciseis\": 16, \"dieciséis\": 16,\n  \"diecisiete\": 17,\n  \"dieciocho\": 18,\n  \"diecinueve\": 19,\n  \"veinte\": 20,\n  \"veintiuno\": 21, \"veintiuna\": 21,\n  \"veintidos\": 22, \"veintidós\": 22,\n  \"veintitres\": 23, \"veintitrés\": 23,\n  \"veinticuatro\": 24,\n  \"veinticinco\": 25,\n  \"veintiseis\": 26, \"veintiséis\": 26,\n  \"veintisiete\": 27,\n  \"veintiocho\": 28,\n  \"veintinueve\": 29,\n  \"treinta\": 30,\n  \"cuarenta\": 40,\n  \"cincuenta\": 50,\n  \"sesenta\": 60,\n  \"setenta\": 70,\n  \"ochenta\": 80,\n  \"noventa\": 90\n};\n\n// Función para quitar acentos\nfunction normalizar(str) {\n  return str.normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\");\n}\n\n// Función para convertir palabras a números o símbolos\nfunction palabraANumero(palabra) {\n  let original = palabra;\n  palabra = normalizar(palabra.toLowerCase().trim());\n  \n  console.log(\"Procesando palabra:\", original, \"->\", palabra);\n  \n  if (palabra === \"punto\") return \".\";\n  \n  if (numeros.hasOwnProperty(palabra)) {\n    console.log(\"Convertido:\", palabra, \"->\", numeros[palabra]);\n    return numeros[palabra];\n  }\n  \n  // Manejo de combinaciones como \"treinta y cinco\"\n  if (palabra.includes(\" y \")) {\n    let partes = palabra.split(\" y \").map(p => p.trim());\n    if (numeros.hasOwnProperty(partes[0]) && numeros.hasOwnProperty(partes[1])) {\n      const resultado = numeros[partes[0]] + numeros[partes[1]];\n      console.log(\"Combinación convertida:\", palabra, \"->\", resultado);\n      return resultado;\n    }\n  }\n  \n  return original; // si no se reconoce, se deja igual\n}\n\n// REGEX SIMPLE: Procesar palabra por palabra\n// Dividir en palabras y procesar cada una individualmente\nlet palabras = texto.split(/(\\s+)/); // Mantiene los espacios\n\nfor (let i = 0; i < palabras.length; i++) {\n  let palabra = palabras[i].trim();\n  if (palabra && !/^\\s+$/.test(palabras[i])) { // Si no es solo espacios\n    const convertido = palabraANumero(palabra);\n    if (convertido !== palabra) {\n      console.log(\"Reemplazo exitoso:\", palabra, \"->\", convertido);\n      palabras[i] = palabras[i].replace(palabra, convertido);\n    }\n  }\n}\n\ntexto = palabras.join('');\n\nconsole.log(\"Texto convertido:\", texto);\n\nreturn { \n  texto_original: $input.first().json?.message?.text || \"\",\n  texto_convertido: texto \n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        160
+      ],
+      "id": "f78e02f5-0ea0-45e0-af36-8add5ff8465b",
+      "name": "Code6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b355a1d1-f888-4ce4-b12b-03a9644fb07e",
+              "name": "final_message",
+              "value": "={{ $json.texto_convertido }}",
+              "type": "string"
+            },
+            {
+              "id": "aa4f659e-93fd-458f-8cb0-d6b2bd655160",
+              "name": "sessionid",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "0f0f416c-ed04-4b77-bb03-23a469d40113",
+              "name": "datetime",
+              "value": "={{ new Date($now).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric' }) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        928,
+        160
+      ],
+      "id": "d10f8f24-1fd3-476e-9300-5c606076f2b0",
+      "name": "FInals_message_text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b65575a3-b476-4c0f-8ce4-a7f93531b7f0",
+              "name": "final_message",
+              "value": "={{ $json.texto_convertido }}",
+              "type": "string"
+            },
+            {
+              "id": "bf8845d4-5e4e-4596-b9d9-ec7940739e0c",
+              "name": "sessionid",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "d1aea00f-74e0-4acd-bf3d-5984b8eade6c",
+              "name": "datetime",
+              "value": "={{ new Date($now).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric' }) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        928,
+        -32
+      ],
+      "id": "85ca60d5-0f9c-4285-b66c-47f8854c1cdf",
+      "name": "Final_message_audio"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1152,
+        160
+      ],
+      "id": "b165d1f1-d4a7-4d1b-8875-06a89455d421",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.mensaje_html }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4160,
+        -128
+      ],
+      "id": "f8fdd2d2-47d1-4d49-b1e8-c950411f7565",
+      "name": "Send a text message",
+      "webhookId": "a93954e3-818e-487c-8c7f-52b729f13857",
+      "credentials": {
+        "telegramApi": {
+          "id": "uvNQL60bF8vWU8mw",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.from.id }}",
+        "text": "={{ $json.mensaje }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3552,
+        176
+      ],
+      "id": "7b27db70-7ae4-4db5-93d9-81e5ef07a7c2",
+      "name": "Send a text message1",
+      "webhookId": "69f887ef-1392-4221-b94a-7a05827ea6cf",
+      "credentials": {
+        "telegramApi": {
+          "id": "uvNQL60bF8vWU8mw",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.mensaje_html }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3040,
+        448
+      ],
+      "id": "0eefeae9-9c62-49f5-81a9-3f677342f16d",
+      "name": "Send a text message2",
+      "webhookId": "62de3c40-43e5-49a6-a723-0fd082a1dbdc",
+      "credentials": {
+        "telegramApi": {
+          "id": "uvNQL60bF8vWU8mw",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -192,
+        832
+      ],
+      "id": "921622a7-ca9e-4031-942f-7d87d0f26d49",
+      "name": "When chat message received",
+      "webhookId": "02b259a2-a5be-49e0-ae76-6b7143505122"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=te van a pedir ejemplos para agregar a unas columnas en googl sheets, devuelva las siguientes variables: \nPRODUCTO\tCANTIDAD\tVALOR_UNITARIO\tVALOR_TOTAL\tFECHA\t\n\neste es un ejemplo:\nChorizos\t4\t6000\t24000\t2/9/2025, 11:09:39 p. m.\t\t\t\t\t\t\n\nnecesito 5 ventas aleatorias por dia  con fecha 1,2,3 de septiembre y quiero que las agregues a la hoja de google sheets.\n\nrevisa los productos que hay en la hoja de sheets get\n\nsolo dame lo que te pedi, nada mas y damelos en json\n\nsalida:\n\n{\n   \"PRODUCTO\": \"Nombre del Producto\",\n    \"CANTIDAD\": 0,\n    \"VALOR_UNITARIO\": 0,\n    \"VALOR_TOTAL\": 0,\n    \"FECHA\": \"Fecha de la Venta\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        832
+      ],
+      "id": "f6bd4b85-6e11-4a36-ae20-36e0081ffbaa",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        32,
+        1056
+      ],
+      "id": "655f2099-d220-44f9-acc4-18bdff2b76b5",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        160,
+        1056
+      ],
+      "id": "4fb489c9-4f81-4fd6-84b4-9cb12f570712",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Negocio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 368924617,
+          "mode": "list",
+          "cachedResultName": "LISTA_PRECIOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=368924617"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        288,
+        1056
+      ],
+      "id": "da186c1a-0f29-4fcd-a7ef-c15547f36f67",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Negocio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ingreso_ventas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "CANTIDAD": "={{ $json.CANTIDAD }}",
+            "VALOR_UNITARIO": "={{ $json.VALOR_UNITARIO }}",
+            "VALOR_TOTAL": "={{ $json.VALOR_TOTAL }}",
+            "FECHA": "={{ $json.FECHA }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CANTIDAD",
+              "displayName": "CANTIDAD",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "VALOR_UNITARIO",
+              "displayName": "VALOR_UNITARIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "VALOR_TOTAL",
+              "displayName": "VALOR_TOTAL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FECHA",
+              "displayName": "FECHA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        720,
+        832
+      ],
+      "id": "2235e913-1ec5-4104-b1ec-444be781a693",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Access the raw output from the previous node.\nconst rawOutput = items[0].json.output;\n\n// Remove the markdown code block identifiers and newlines.\n// The .replace() method will get rid of the \"```json\\n\" and \"\\n```\" parts.\nconst cleanedOutput = rawOutput\n  .replace(\"```json\\n\", \"\")\n  .replace(\"\\n```\", \"\");\n\n// Now, parse the cleaned string into a JavaScript object.\nconst parsedSales = JSON.parse(cleanedOutput);\n\n// Initialize an empty array to store the processed items.\nconst processedItems = [];\n\n// Iterate over each sales object in the parsed data.\nfor (const sale of parsedSales) {\n  // Create a new object for the output, maintaining the desired structure.\n  const formattedSale = {\n    \"PRODUCTO\": sale.PRODUCTO,\n    \"CANTIDAD\": sale.CANTIDAD,\n    \"VALOR_UNITARIO\": sale.VALOR_UNITARIO,\n    \"VALOR_TOTAL\": sale.VALOR_TOTAL,\n    \"FECHA\": sale.FECHA\n  };\n\n  // Push the formatted object to the new array with the required 'json' key.\n  processedItems.push({\n    json: formattedSale\n  });\n}\n\n// Return the final array of processed items.\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        832
+      ],
+      "id": "d662f379-8db9-4288-b084-26071a0634b2",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Solo para depurar\nconsole.log(\"Contenido de $input.first().json:\", $input.first().json);\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        160
+      ],
+      "id": "e2a68281-20e4-4ab1-b135-31a3f8699c8e",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Si sabes que viene en item.json.output específicamente\nconst inputData = $input.all();\n\nreturn inputData.map(item => ({\n  json: {\n    categoria: (item.json.output || '').replace(/\\\\n/g, '').trim()\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1952,
+        160
+      ],
+      "id": "17a1ac45-0001-4a9f-b1ad-cb17983f0093",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "content": "## GENERACION DE RESPUESTA",
+        "height": 80,
+        "width": 2032,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2368,
+        -304
+      ],
+      "id": "bd7f5454-2fe9-48a3-8cfb-7957f030f9c1",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generador de mensaje WhatsApp/Telegram para resumen de ventas - Con formato HTML\nconst fechaObjetivo = $('Interpretar_mensaje').item.json.fechaInicio;\nconst todasLasVentas = $('ventas_solicitadas').all();\n\nconsole.log(\"Generando resumen para fecha: \" + fechaObjetivo);\n\n// Función para normalizar fechas a formato DD-MM-YYYY\nfunction normalizarFecha(fecha) {\n  if (!fecha) return null;\n  \n  // Si ya está en formato DD-MM-YYYY\n  if (typeof fecha === 'string' && fecha.match(/^\\d{1,2}-\\d{1,2}-\\d{4}$/)) {\n    const partes = fecha.split('-');\n    const dia = partes[0];\n    const mes = partes[1];\n    const año = partes[2];\n    return dia.padStart(2, '0') + '-' + mes.padStart(2, '0') + '-' + año;\n  }\n  \n  // Si viene en formato \"24/8/2025, 8:27:04 p. m.\"\n  if (typeof fecha === 'string' && fecha.includes('/')) {\n    try {\n      const partesFecha = fecha.split(',')[0].trim();\n      const partes = partesFecha.split('/');\n      const dia = partes[0];\n      const mes = partes[1];\n      const año = partes[2];\n      return dia.padStart(2, '0') + '-' + mes.padStart(2, '0') + '-' + año;\n    } catch (error) {\n      return null;\n    }\n  }\n  \n  return null;\n}\n\n// Función para formatear números con separadores de miles\nfunction formatearPeso(valor) {\n  return '$' + new Intl.NumberFormat('es-CO').format(valor);\n}\n\n// Función para obtener día de la semana en español\nfunction obtenerDiaSemana(fecha) {\n  const partes = fecha.split('-');\n  const dia = partes[0];\n  const mes = partes[1];\n  const año = partes[2];\n  const fechaObj = new Date(año, mes - 1, dia);\n  const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];\n  return dias[fechaObj.getDay()];\n}\n\n// Función para fecha legible corta\nfunction fechaLegibleCorta(fecha) {\n  const partes = fecha.split('-');\n  const dia = partes[0];\n  const mes = partes[1];\n  return dia + '/' + mes;\n}\n\n// Función para convertir fecha a formato legible\nfunction fechaLegible(fecha) {\n  const partes = fecha.split('-');\n  const dia = partes[0];\n  const mes = partes[1];\n  const año = partes[2];\n  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',\n                 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];\n  const diaSemana = obtenerDiaSemana(fecha);\n  const diaCapitalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);\n  return diaCapitalizado + ', ' + parseInt(dia) + ' de ' + meses[parseInt(mes)-1] + ' de ' + año;\n}\n\n// Obtener el tipo de consulta y fechas\nconst tipoConsulta = $('Interpretar_mensaje').item.json.queryType;\nconst fechaInicio = $('Interpretar_mensaje').item.json.fechaInicio;\nconst fechaFin = $('Interpretar_mensaje').item.json.fechaFin;\n\n// Filtrar ventas por fecha (ahora maneja rangos)\nconst fechaInicioNormalizada = normalizarFecha(fechaInicio);\nconst fechaFinNormalizada = normalizarFecha(fechaFin);\n\nconsole.log(\"Filtrando desde: \" + fechaInicioNormalizada + \" hasta: \" + fechaFinNormalizada);\n\nlet ventasFiltradas = [];\n\nfor (let i = 0; i < todasLasVentas.length; i++) {\n  const venta = todasLasVentas[i].json;\n  const fechaVenta = venta.FECHA;\n  \n  if (fechaVenta) {\n    const fechaVentaNormalizada = normalizarFecha(fechaVenta);\n    \n    // Comparar si la fecha está en el rango\n    if (fechaVentaNormalizada >= fechaInicioNormalizada && fechaVentaNormalizada <= fechaFinNormalizada) {\n      ventasFiltradas.push(venta);\n    }\n  }\n}\n\n// Procesar datos para el resumen\nlet resumenProductos = {};\nlet resumenPorDia = {}; // Para agrupar por día\nlet valorTotalGeneral = 0;\nlet cantidadTotalProductos = 0;\n\nventasFiltradas.forEach(function(venta) {\n  const producto = venta.PRODUCTO;\n  const cantidad = parseInt(venta.CANTIDAD) || 0;\n  const valorTotal = parseFloat(venta.VALOR_TOTAL) || 0;\n  const fechaVenta = normalizarFecha(venta.FECHA);\n  \n  // Agrupar por productos\n  if (!resumenProductos[producto]) {\n    resumenProductos[producto] = {\n      cantidad: 0,\n      valorTotal: 0\n    };\n  }\n  \n  resumenProductos[producto].cantidad += cantidad;\n  resumenProductos[producto].valorTotal += valorTotal;\n  \n  // Agrupar por día para reporte semanal\n  if (!resumenPorDia[fechaVenta]) {\n    resumenPorDia[fechaVenta] = 0;\n  }\n  resumenPorDia[fechaVenta] += valorTotal;\n  \n  valorTotalGeneral += valorTotal;\n  cantidadTotalProductos += cantidad;\n});\n\n// Generar mensaje HTML para WhatsApp/Telegram\nlet mensajeHTML = '';\nlet mensajeTexto = '';\n\nif (ventasFiltradas.length === 0) {\n  // Sin ventas - Formato HTML\n  const tituloHTML = tipoConsulta === 'semana' ? \n    '<b>📊 RESUMEN SEMANAL</b>\\n<i>📅 ' + fechaLegibleCorta(fechaInicioNormalizada) + ' al ' + fechaLegibleCorta(fechaFinNormalizada) + '</i>' :\n    '<b>📊 RESUMEN DE VENTAS</b>\\n<i>📅 ' + fechaLegible(fechaInicioNormalizada) + '</i>';\n    \n  mensajeHTML = tituloHTML + '\\n\\n<code>⚠️ No se registraron ventas para este período</code>';\n  \n  // Versión texto plano\n  const tituloTexto = tipoConsulta === 'semana' ? \n    '📊 RESUMEN SEMANAL\\n📅 ' + fechaLegibleCorta(fechaInicioNormalizada) + ' al ' + fechaLegibleCorta(fechaFinNormalizada) :\n    '📊 RESUMEN DE VENTAS\\n📅 ' + fechaLegible(fechaInicioNormalizada);\n    \n  mensajeTexto = tituloTexto + '\\n\\n⚠️ No se registraron ventas para este período';\n  \n} else if (tipoConsulta === 'semana' || tipoConsulta === 'mes') {\n  // FORMATO ESPECIAL PARA SEMANA/MES - HTML\n  mensajeHTML = '<b>📊 RESUMEN SEMANAL</b>\\n';\n  mensajeHTML += '<i>📅 ' + fechaLegibleCorta(fechaInicioNormalizada) + ' al ' + fechaLegibleCorta(fechaFinNormalizada) + '</i>\\n';\n  mensajeHTML += '<code>━━━━━━━━━━━━━━━━━━━━━━━━━</code>\\n\\n';\n  \n  // Versión texto plano\n  mensajeTexto = '📊 RESUMEN SEMANAL\\n';\n  mensajeTexto += '📅 ' + fechaLegibleCorta(fechaInicioNormalizada) + ' al ' + fechaLegibleCorta(fechaFinNormalizada) + '\\n';\n  mensajeTexto += '━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n';\n  \n  // Ordenar días por fecha\n  const diasOrdenados = Object.keys(resumenPorDia).sort();\n  \n  diasOrdenados.forEach(function(fecha) {\n    const diaSemana = obtenerDiaSemana(fecha);\n    const total = resumenPorDia[fecha];\n    \n    // HTML\n    mensajeHTML += '<code>📅 ' + diaSemana + '</code> — <b>' + formatearPeso(total) + '</b>\\n';\n    \n    // Texto plano\n    mensajeTexto += '📅 ' + diaSemana + ' — ' + formatearPeso(total) + '\\n';\n  });\n  \n  // Total final\n  mensajeHTML += '\\n<code>━━━━━━━━━━━━━━━━━━━━━━━━━</code>\\n';\n  mensajeHTML += '<b>💰 TOTAL GENERAL: ' + formatearPeso(valorTotalGeneral) + '</b>';\n  \n  mensajeTexto += '\\n━━━━━━━━━━━━━━━━━━━━━━━━━\\n';\n  mensajeTexto += '💰 TOTAL GENERAL: ' + formatearPeso(valorTotalGeneral);\n  \n} else {\n  // FORMATO NORMAL PARA DÍAS - HTML\n  mensajeHTML = '<b>📊 RESUMEN DE VENTAS</b>\\n';\n  mensajeHTML += '<i>📅 ' + fechaLegible(fechaInicioNormalizada) + '</i>\\n';\n  mensajeHTML += '<code>━━━━━━━━━━━━━━━━━━━━━━━━━</code>\\n\\n';\n  \n  // Versión texto plano\n  mensajeTexto = '📊 RESUMEN DE VENTAS\\n';\n  mensajeTexto += '📅 ' + fechaLegible(fechaInicioNormalizada) + '\\n';\n  mensajeTexto += '━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n';\n  \n  // Ordenar productos por valor total (mayor a menor)\n  const productosArray = Object.entries(resumenProductos);\n  productosArray.sort(function(a, b) {\n    return b[1].valorTotal - a[1].valorTotal;\n  });\n  \n  // Lista de productos\n  productosArray.forEach(function(item) {\n    const producto = item[0];\n    const datos = item[1];\n    \n    // HTML\n    mensajeHTML += '<code>' + producto + '</code> — <b>' + datos.cantidad + ' und</b> — <b>' + formatearPeso(datos.valorTotal) + '</b>\\n';\n    \n    // Texto plano\n    mensajeTexto += producto + ' — ' + datos.cantidad + ' und — ' + formatearPeso(datos.valorTotal) + '\\n';\n  });\n  \n  // Total general\n  mensajeHTML += '<code>━━━━━━━━━━━━━━━━━━━━━━━━━</code>\\n';\n  mensajeHTML += '<b>💰 TOTAL GENERAL: ' + formatearPeso(valorTotalGeneral) + '</b>';\n  \n  mensajeTexto += '━━━━━━━━━━━━━━━━━━━━━━━━━\\n';\n  mensajeTexto += '💰 TOTAL GENERAL: ' + formatearPeso(valorTotalGeneral);\n}\n\nconsole.log(\"Ventas procesadas: \" + ventasFiltradas.length);\nconsole.log(\"Valor total: \" + valorTotalGeneral);\n\n// Retornar el mensaje con ambas versiones\nreturn [\n  {\n    json: {\n      mensaje_html: mensajeHTML,\n      mensaje_texto: mensajeTexto,\n      parse_mode: 'HTML',\n      tipo_consulta: tipoConsulta,\n      fecha_inicio: fechaInicioNormalizada,\n      fecha_fin: fechaFinNormalizada,\n      total_ventas: valorTotalGeneral,\n      total_productos: cantidadTotalProductos,\n      total_transacciones: ventasFiltradas.length,\n      resumen_productos: resumenProductos,\n      resumen_por_dia: resumenPorDia\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2832,
+        448
+      ],
+      "id": "7348989d-dc9c-4a20-9451-20a440240ca1",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Código para nodo Code de n8n - Confirmación de Ventas (Formato Simplificado)\n// Los datos llegan desde Google Sheets con las columnas: CANTIDAD, PRODUCTO, VALOR_UNITARIO, VALOR_TOTAL\n\n// Obtener los datos de entrada\nconst inputData = $input.all();\n\n// Arrays para procesar los datos\nconst ventasItems = [];\nlet totalGeneral = 0;\n\n// Función para manejar plurales\nconst manejarPlural = (cantidad, producto) => {\n  const cantidadNum = parseInt(cantidad);\n  \n  // Si la cantidad es 1, intentar convertir a singular\n  if (cantidadNum === 1) {\n    const palabras = producto.trim().split(' ');\n    let primeraPalabra = palabras[0];\n    \n    // Solo procesar la primera palabra para singular/plural\n    if (primeraPalabra.endsWith('s') && primeraPalabra.length > 1) {\n      // Casos especiales que NO deben perder la 's'\n      const excepcionesS = ['lapis', 'virus', 'tesis', 'crisis', 'oasis', 'martes', 'miercoles', 'jueves', 'viernes'];\n      const palabraLower = primeraPalabra.toLowerCase();\n      \n      // Si no es una excepción, quitar la 's'\n      if (!excepcionesS.some(excepcion => palabraLower.includes(excepcion))) {\n        // Si termina en 'es' después de consonante, quitar 'es'\n        if (primeraPalabra.endsWith('es') && primeraPalabra.length > 2) {\n          const antesDe_es = primeraPalabra[primeraPalabra.length - 3];\n          // Si antes de 'es' hay una consonante (no vocal)\n          if (!'aeiouáéíóú'.includes(antesDe_es.toLowerCase())) {\n            primeraPalabra = primeraPalabra.slice(0, -2);\n          } else {\n            primeraPalabra = primeraPalabra.slice(0, -1);\n          }\n        } else {\n          // Simplemente quitar la 's' final\n          primeraPalabra = primeraPalabra.slice(0, -1);\n        }\n      }\n    }\n    \n    // Reconstruir el nombre del producto con la primera palabra en singular\n    palabras[0] = primeraPalabra;\n    return palabras.join(' ');\n  }\n  \n  // Si la cantidad es mayor a 1, devolver el producto original (plural)\n  return producto;\n};\n\n// Procesar cada fila de datos\nfor (const item of inputData) {\n  const { \n    CANTIDAD, \n    PRODUCTO, \n    VALOR_UNITARIO, \n    VALOR_TOTAL \n  } = item.json;\n  \n  // Validar que todos los campos necesarios estén presentes\n  if (!CANTIDAD || !PRODUCTO || !VALOR_TOTAL) {\n    console.log('Datos incompletos en una fila:', item.json);\n    continue;\n  }\n  \n  // Formatear valores monetarios (formato colombiano sin símbolo)\n  const formatCurrency = (value) => {\n    return parseInt(value).toLocaleString('es-CO');\n  };\n  \n  // Manejar plural/singular del producto\n  const productoFormateado = manejarPlural(CANTIDAD, PRODUCTO);\n  \n  // Agregar item a la lista con el producto en singular/plural correcto\n  const itemFormateado = `- ${parseInt(CANTIDAD)} ${productoFormateado} = ${formatCurrency(VALOR_TOTAL)}`;\n  ventasItems.push(itemFormateado);\n  \n  // Sumar al total general\n  totalGeneral += parseFloat(VALOR_TOTAL);\n}\n\n// Formatear el total general\nconst totalFormateado = totalGeneral.toLocaleString('es-CO');\n\n// Crear mensaje con formato HTML para Telegram\nlet mensajeHTML = '<b>✅ Registro de ventas:</b>\\n\\n';\nventasItems.forEach(item => {\n  mensajeHTML += `<code>${item}</code>\\n`;\n});\nmensajeHTML += `\\n<b>💰 Total de la venta: $ ${totalFormateado}</b>`;\n\n// Crear mensaje de texto plano (backup)\nlet mensajeTexto = '✅ Registro de ventas:\\n\\n';\nmensajeTexto += ventasItems.join('\\n');\nmensajeTexto += `\\n\\n💰 Total de la venta: $ ${totalFormateado}`;\n\n// Crear objeto de respuesta\nconst resultado = {\n  mensaje_html: mensajeHTML,\n  mensaje_texto: mensajeTexto,\n  parse_mode: 'HTML',\n  total_venta: totalGeneral,\n  cantidad_items: ventasItems.length,\n  items: ventasItems,\n  fecha_registro: new Date().toLocaleDateString('es-CO'),\n  hora_registro: new Date().toLocaleTimeString('es-CO', {\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: true\n  })\n};\n\n// Retornar resultado (si hay múltiples filas, se agrupan en un solo mensaje)\nreturn [resultado];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3952,
+        -128
+      ],
+      "id": "d2ec4e5a-9601-4f95-b0d4-13109c2755c9",
+      "name": "mensaje_confirmacion1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Negocio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1898212254,
+          "mode": "list",
+          "cachedResultName": "inventario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=1898212254"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A:F"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3952,
+        48
+      ],
+      "id": "51204020-481e-45d9-95c4-affa04fa64bd",
+      "name": "Obtener_inventario_actual",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== DIAGNÓSTICO COMPLETO =====\nconsole.log('=== INICIO DIAGNÓSTICO ===');\n\ntry {\n  // 1. VERIFICAR OBTENCIÓN DE DATOS\n  console.log('1. Verificando obtención de datos...');\n  \n  let ventasData, inventarioData;\n  \n  try {\n    ventasData = $('Guardar_venta_en_hoja').all();\n    console.log('✅ Datos de ventas obtenidos correctamente');\n    console.log('   Tipo:', typeof ventasData);\n    console.log('   Es array:', Array.isArray(ventasData));\n    console.log('   Longitud:', ventasData?.length || 'undefined');\n  } catch (error) {\n    console.log('❌ Error obteniendo datos de ventas:', error.message);\n    return [{ json: { ERROR: 'No se pudieron obtener datos de ventas', detalle: error.message }}];\n  }\n\n  try {\n    inventarioData = $input.all();\n    console.log('✅ Datos de inventario obtenidos correctamente');\n    console.log('   Tipo:', typeof inventarioData);\n    console.log('   Es array:', Array.isArray(inventarioData));\n    console.log('   Longitud:', inventarioData?.length || 'undefined');\n  } catch (error) {\n    console.log('❌ Error obteniendo datos de inventario:', error.message);\n    return [{ json: { ERROR: 'No se pudieron obtener datos de inventario', detalle: error.message }}];\n  }\n\n  // 2. VERIFICAR ESTRUCTURA DE DATOS\n  console.log('\\n2. Verificando estructura de datos...');\n  \n  // Verificar ventas\n  if (!ventasData || ventasData.length === 0) {\n    console.log('❌ No hay datos de ventas o está vacío');\n    return [{ json: { ERROR: 'No hay datos de ventas', ventasLength: ventasData?.length }}];\n  }\n  \n  console.log('📋 Primeras 3 ventas (estructura):');\n  ventasData.slice(0, 3).forEach((venta, index) => {\n    console.log(`   Venta ${index + 1}:`, JSON.stringify(venta, null, 2));\n  });\n\n  // Verificar inventario\n  if (!inventarioData || inventarioData.length === 0) {\n    console.log('❌ No hay datos de inventario o está vacío');\n    return [{ json: { ERROR: 'No hay datos de inventario', inventarioLength: inventarioData?.length }}];\n  }\n  \n  console.log('📋 Primeros 3 items inventario (estructura):');\n  inventarioData.slice(0, 3).forEach((item, index) => {\n    console.log(`   Item ${index + 1}:`, JSON.stringify(item, null, 2));\n  });\n\n  // 3. VERIFICAR CAMPOS REQUERIDOS\n  console.log('\\n3. Verificando campos requeridos...');\n  \n  // Verificar campos en ventas\n  const ventasConProblemas = [];\n  ventasData.forEach((venta, index) => {\n    if (!venta.json) {\n      ventasConProblemas.push(`Venta ${index}: No tiene propiedad 'json'`);\n    } else {\n      if (!venta.json.PRODUCTO) {\n        ventasConProblemas.push(`Venta ${index}: No tiene PRODUCTO`);\n      }\n      if (!venta.json.CANTIDAD) {\n        ventasConProblemas.push(`Venta ${index}: No tiene CANTIDAD`);\n      }\n    }\n  });\n  \n  if (ventasConProblemas.length > 0) {\n    console.log('❌ Problemas en estructura de ventas:');\n    ventasConProblemas.forEach(problema => console.log('   -', problema));\n  } else {\n    console.log('✅ Estructura de ventas correcta');\n  }\n\n  // Verificar campos en inventario\n  const inventarioConProblemas = [];\n  inventarioData.forEach((item, index) => {\n    if (!item.json) {\n      inventarioConProblemas.push(`Item ${index}: No tiene propiedad 'json'`);\n    } else {\n      if (!item.json.PRODUCTO) {\n        inventarioConProblemas.push(`Item ${index}: No tiene PRODUCTO`);\n      }\n      if (item.json.STOCK_ACTUAL_UNIDADES === undefined) {\n        inventarioConProblemas.push(`Item ${index}: No tiene STOCK_ACTUAL_UNIDADES`);\n      }\n    }\n  });\n  \n  if (inventarioConProblemas.length > 0) {\n    console.log('❌ Problemas en estructura de inventario:');\n    inventarioConProblemas.forEach(problema => console.log('   -', problema));\n  } else {\n    console.log('✅ Estructura de inventario correcta');\n  }\n\n  // 4. CREAR MAPA Y VERIFICAR COINCIDENCIAS\n  console.log('\\n4. Creando mapa de inventario...');\n  \n  const inventarioMap = {};\n  let productosInventario = 0;\n  \n  inventarioData.forEach(item => {\n    if (item.json && item.json.PRODUCTO) {\n      const producto = item.json.PRODUCTO;\n      inventarioMap[producto] = { ...item.json };\n      productosInventario++;\n    }\n  });\n  \n  console.log(`✅ Mapa creado con ${productosInventario} productos`);\n  console.log('📋 Productos en inventario:', Object.keys(inventarioMap).slice(0, 10));\n\n  // 5. VERIFICAR COINCIDENCIAS\n  console.log('\\n5. Verificando coincidencias...');\n  \n  const productosVenta = [];\n  const coincidencias = [];\n  const noCoincidencias = [];\n  \n  ventasData.forEach(venta => {\n    if (venta.json && venta.json.PRODUCTO) {\n      const producto = venta.json.PRODUCTO;\n      productosVenta.push(producto);\n      \n      if (inventarioMap.hasOwnProperty(producto)) {\n        coincidencias.push(producto);\n      } else {\n        noCoincidencias.push(producto);\n      }\n    }\n  });\n  \n  console.log(`📋 Productos en ventas: ${productosVenta.length}`);\n  console.log(`✅ Coincidencias encontradas: ${coincidencias.length}`);\n  console.log(`❌ Sin coincidencias: ${noCoincidencias.length}`);\n  \n  if (noCoincidencias.length > 0) {\n    console.log('📋 Productos de ventas no encontrados en inventario:');\n    noCoincidencias.forEach(producto => console.log('   -', producto));\n  }\n\n  // 6. PROCESAR ACTUALIZACIONES (CON MÁS LOGS)\n  console.log('\\n6. Procesando actualizaciones...');\n  \n  const actualizacionesInventario = [];\n  \n  ventasData.forEach((venta, ventaIndex) => {\n    if (!venta.json || !venta.json.PRODUCTO) {\n      console.log(`⚠️ Venta ${ventaIndex}: Datos incompletos, saltando`);\n      return;\n    }\n    \n    const productoVenta = venta.json.PRODUCTO;\n    const cantidadVenta = parseInt(venta.json.CANTIDAD) || 0;\n    \n    console.log(`🔄 Procesando venta ${ventaIndex}: ${productoVenta} - Cantidad: ${cantidadVenta}`);\n    \n    if (inventarioMap.hasOwnProperty(productoVenta)) {\n      const itemInventario = inventarioMap[productoVenta];\n      const stockActual = parseInt(itemInventario.STOCK_ACTUAL_UNIDADES) || 0;\n      const nuevoStock = stockActual - cantidadVenta;\n      \n      console.log(`   📊 ${productoVenta}: ${stockActual} → ${nuevoStock} (vendido: ${cantidadVenta})`);\n      \n      actualizacionesInventario.push({\n        PRODUCTO: productoVenta,\n        UNIDAD_MEDIDA: itemInventario.UNIDAD_MEDIDA || '',\n        FACTOR_UNIDADES: itemInventario.FACTOR_UNIDADES || '',\n        STOCK_ACTUAL_UNIDADES: nuevoStock,\n        PRECIO_ULTIMA_COMPRA: itemInventario.PRECIO_ULTIMA_COMPRA || '',\n        FECHA_ULTIMA_COMPRA: itemInventario.FECHA_ULTIMA_COMPRA || '',\n        stockAnterior: stockActual,\n        cantidadVendida: cantidadVenta,\n        ventaIndex: ventaIndex\n      });\n    } else {\n      console.log(`   ❌ ${productoVenta}: No encontrado en inventario`);\n    }\n  });\n\n  console.log(`\\n📊 RESUMEN:`);\n  console.log(`   Ventas procesadas: ${ventasData.length}`);\n  console.log(`   Items en inventario: ${inventarioData.length}`);\n  console.log(`   Actualizaciones generadas: ${actualizacionesInventario.length}`);\n\n  // 7. VERIFICAR RESULTADO FINAL\n  console.log('\\n7. Preparando resultado final...');\n  \n  const resultado = actualizacionesInventario.map(item => ({ json: item }));\n  \n  console.log(`📤 Retornando ${resultado.length} actualizaciones`);\n  \n  if (resultado.length > 0) {\n    console.log('📋 Primera actualización:', JSON.stringify(resultado[0], null, 2));\n  }\n\n  console.log('=== FIN DIAGNÓSTICO ===\\n');\n  \n  return resultado;\n\n} catch (error) {\n  console.log('❌ ERROR GENERAL:', error.message);\n  console.log('📍 Stack:', error.stack);\n  return [{ json: { ERROR: 'Error general en el procesamiento', detalle: error.message, stack: error.stack }}];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4160,
+        48
+      ],
+      "id": "74bf409f-f6f1-41d1-87e3-43a00700c57a",
+      "name": "Procesar_actualizacion_inventario"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Negocio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1898212254,
+          "mode": "list",
+          "cachedResultName": "inventario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=1898212254"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "UNIDAD_MEDIDA": "={{ $json.UNIDAD_MEDIDA }}",
+            "FACTOR_UNIDADES": "={{ $json.FACTOR_UNIDADES }}",
+            "STOCK_ACTUAL_UNIDADES": "={{ $json.STOCK_ACTUAL_UNIDADES }}",
+            "PRECIO_ULTIMA_COMPRA": "={{ $json.PRECIO_ULTIMA_COMPRA }}",
+            "FECHA_ULTIMA_COMPRA": "={{ $json.FECHA_ULTIMA_COMPRA }}"
+          },
+          "matchingColumns": [
+            "PRODUCTO"
+          ],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "UNIDAD_MEDIDA",
+              "displayName": "UNIDAD_MEDIDA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FACTOR_UNIDADES",
+              "displayName": "FACTOR_UNIDADES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "STOCK_ACTUAL_UNIDADES",
+              "displayName": "STOCK_ACTUAL_UNIDADES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PRECIO_ULTIMA_COMPRA",
+              "displayName": "PRECIO_ULTIMA_COMPRA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FECHA_ULTIMA_COMPRA",
+              "displayName": "FECHA_ULTIMA_COMPRA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4368,
+        48
+      ],
+      "id": "3da4d851-57e5-4d1f-93d4-78644d69abdb",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CLASIFICA TIPO DE ENTRADA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Interpretar_mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "LIMPIA MENSAJE DE VENTA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LIMPIA MENSAJE DE VENTA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code_ventas": {
+      "main": [
+        [
+          {
+            "node": "Obtener_lista_precios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener_lista_precios": {
+      "main": [
+        [
+          {
+            "node": "Cruce_precio_venta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cruce_precio_venta": {
+      "main": [
+        [
+          {
+            "node": "Guardar_venta_en_hoja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar_venta_en_hoja": {
+      "main": [
+        [
+          {
+            "node": "mensaje_confirmacion1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Obtener_inventario_actual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CLASIFICA TIPO DE ENTRADA": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LIMPIA MENSAJE DE VENTA": {
+      "main": [
+        [
+          {
+            "node": "Code_ventas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ventas_solicitadas": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar_mensaje": {
+      "main": [
+        [
+          {
+            "node": "ventas_solicitadas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crear_mensaje": {
+      "main": [
+        []
+      ]
+    },
+    "crea_o_actualiza_productos": {
+      "main": [
+        [
+          {
+            "node": "crea_mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crea_mensaje": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "crea_o_actualiza_productos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording1": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "Final_message_audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "FInals_message_text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final_message_audio": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FInals_message_text": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "CLASIFICA TIPO DE ENTRADA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mensaje_confirmacion1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener_inventario_actual": {
+      "main": [
+        [
+          {
+            "node": "Procesar_actualizacion_inventario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar_actualizacion_inventario": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bogota",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "APs2yNeX1kNL3e1L"
+  },
+  "versionId": "5dafa96b-6453-4d18-b0d9-ebf202bc6ef8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "07f67ec32baaad4ae3d75f4e22d6ad4d1aa561c2ad8388f49ad7031ee0fe8de1"
+  },
+  "id": "PQirJJgwidXNyGEd",
+  "tags": []
+}
