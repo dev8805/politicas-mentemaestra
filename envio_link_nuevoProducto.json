@@ -1,0 +1,115 @@
+{
+  "name": "envio_link_nuevoProducto",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "mensaje"
+            },
+            {
+              "name": "instancia"
+            },
+            {
+              "name": "telefono"
+            },
+            {
+              "name": "fecha"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        448,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "51fa4f01-1dff-4f22-8690-dbfbdcefb133",
+              "name": "como crear mensaje",
+              "value": "\"Para crear un nuevo producto, usa este formulario: https://n8n-n8n.jac8tn.easypanel.host/form/084c7fb5-5b09-462b-bbc7-8378fe372e60\"",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        224
+      ],
+      "id": "8dc86c9b-6f0c-4726-a070-b109c42faa51",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.instancia }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.telefono }}",
+        "messageText": "={{ $json['como crear mensaje'] }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        864,
+        224
+      ],
+      "id": "134a9611-4bf1-447d-9e8d-238779891850",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "B3iSOloEJUHghytc",
+          "name": "Evolution account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "261c9b27-6a0f-45f0-95ca-2d27014d6e69",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "07f67ec32baaad4ae3d75f4e22d6ad4d1aa561c2ad8388f49ad7031ee0fe8de1"
+  },
+  "id": "ZreAVVrz07RDx1dx",
+  "tags": []
+}

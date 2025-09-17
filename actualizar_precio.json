@@ -1,0 +1,352 @@
+{
+  "name": "actualizar_precio",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "mensaje"
+            },
+            {
+              "name": "telefono"
+            },
+            {
+              "name": "instancia"
+            },
+            {
+              "name": "fecha"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        384,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Gerson",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 517997965,
+          "mode": "list",
+          "cachedResultName": "lista_precios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=517997965"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "PRECIO_UNITARIO": "={{ $json.PRECIO_UNITARIO }}"
+          },
+          "matchingColumns": [
+            "PRODUCTO"
+          ],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PRECIO_UNITARIO",
+              "displayName": "PRECIO_UNITARIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        352
+      ],
+      "id": "810697d9-9a96-47eb-bf6f-75bfa69619ca",
+      "name": "crea_o_actualiza_productos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener los datos del nodo de Google Sheets\nconst sheetData = $('crea_o_actualiza_productos').all();\n\n// Función para generar la respuesta\nfunction generateProductResponse(data) {\n    if (!data || data.length === 0) {\n        return \"❌ No se pudo procesar ningún producto. Por favor, verifica el formato del mensaje.\";\n    }\n    \n    let productosValidos = [];\n    let productosConError = [];\n    \n    // Procesar cada elemento de respuesta del sheets\n    data.forEach((item, index) => {\n        const json = item.json;\n        \n        // Verificar si hay error en la respuesta\n        if (json.error || json.PRODUCTO === 'ERROR') {\n            productosConError.push({\n                error: json.error || 'Error desconocido',\n                producto: json.PRODUCTO || 'Producto desconocido'\n            });\n            return;\n        }\n        \n        const producto = {\n            nombre: json.PRODUCTO || json.producto || json.name,\n            precio: json.PRECIO_UNITARIO || json.precio || json.price\n        };\n        \n        // Validar que tengamos datos válidos\n        if (producto.nombre && producto.precio) {\n            productosValidos.push(producto);\n        }\n    });\n    \n    // Generar mensaje de respuesta\n    return buildResponseMessage(productosValidos, productosConError);\n}\n\n// Función para construir el mensaje de respuesta simplificado\nfunction buildResponseMessage(productos, errores) {\n    let mensaje = \"\";\n    \n    // Productos procesados exitosamente\n    if (productos.length > 0) {\n        mensaje += \"✅ *Precio actualizado:*\\n\\n\";\n        \n        productos.forEach((producto, index) => {\n            mensaje += `${index + 1}. ${producto.nombre} - $${formatPrice(producto.precio)}\\n`;\n        });\n    }\n    \n    // Errores si los hay\n    if (errores.length > 0) {\n        if (productos.length > 0) mensaje += \"\\n\";\n        mensaje += \"⚠️ *Errores:*\\n\";\n        errores.forEach((error, index) => {\n            mensaje += `${index + 1}. ${error.producto}: ${error.error}\\n`;\n        });\n    }\n    \n    // Si no hay productos procesados\n    if (productos.length === 0 && errores.length === 0) {\n        mensaje = \"❌ No se encontraron productos válidos para procesar.\\n\\n\";\n        mensaje += \"💡 *Formato correcto:*\\n\";\n        mensaje += \"• producto a precio\\n\";\n        mensaje += \"• Ejemplo: coca cola 350ml a 3000\\n\";\n        mensaje += \"• Ejemplo: arepa burguer a 7000\";\n    }\n    \n    return mensaje.trim();\n}\n\n// Función para formatear precios (agregar separadores de miles)\nfunction formatPrice(price) {\n    return new Intl.NumberFormat('es-CO').format(price);\n}\n\n// Función alternativa si el nodo de sheets retorna datos en formato diferente\nfunction generateResponseFromAlternativeFormat(data) {\n    if (!data || data.length === 0) {\n        return generateProductResponse([]);\n    }\n    \n    // Si los datos vienen en formato diferente, adaptarlos\n    const adaptedData = data.map(item => {\n        return {\n            json: {\n                PRODUCTO: item.PRODUCTO || item.producto || item.name,\n                PRECIO_UNITARIO: item.PRECIO_UNITARIO || item.precio || item.price,\n                error: item.error\n            }\n        };\n    });\n    \n    return generateProductResponse(adaptedData);\n}\n\n// Ejecutar la generación de respuesta\nconsole.log('Datos recibidos del nodo sheets:', sheetData);\n\nlet mensaje_limpio;\n\n// Intentar con el formato principal\ntry {\n    mensaje_limpio = generateProductResponse(sheetData);\n} catch (error) {\n    console.log('Error con formato principal, intentando formato alternativo:', error);\n    \n    // Si falla, intentar con formato alternativo\n    try {\n        mensaje_limpio = generateResponseFromAlternativeFormat(sheetData);\n    } catch (altError) {\n        console.log('Error con formato alternativo:', altError);\n        \n        // Respuesta de error genérica\n        mensaje_limpio = \"❌ Error interno al procesar los datos de los productos.\";\n    }\n}\n\nconsole.log('Mensaje generado:', mensaje_limpio);\n\n// Retornar SOLO el mensaje limpio\nreturn [{\n    mensaje: mensaje_limpio\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        352
+      ],
+      "id": "9a590dd0-d2a4-4c42-9efa-89a05b82247c",
+      "name": "crea_mensaje"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.mensaje }}",
+        "options": {
+          "systemMessage": "=#ROL\nTu funcion es extraer productos y precios, para devolverlos en las variables PRODUCTO y PRECIO_UNITARIO\n\n#FORMATO DE SALIDA\nes para modificar precios de productos entonces, hazlo para que el siguiente nodo los pueda agregar a la hoja de sheets correctamente\n\nEjemplos de formatos válidos:\nUn solo producto:\n\"PRODUCTO: Chorizos\\nPRECIO_UNITARIO: 8500\"\n\nMúltiples productos:\n\"PRODUCTO: Chorizos\\nPRECIO_UNITARIO: 8500\\n\\nPRODUCTO: Arepas de queso\\nPRECIO_UNITARIO: 2200\\n\\nPRODUCTO: Tintos\\nPRECIO_UNITARIO: 1500\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        352
+      ],
+      "id": "45c044b6-6a47-4346-8f34-52d5b84cbb0f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        720,
+        528
+      ],
+      "id": "ad15085c-55b5-4287-bd67-86fe2b2f61e9",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener los datos de entrada\nconst inputData = $input.all();\n\n// Función para parsear el output y convertirlo al formato requerido\nfunction parseOutputToSheetFormat(data) {\n    const results = [];\n    \n    // Procesar cada item de entrada\n    data.forEach((item, index) => {\n        try {\n            // Obtener el texto del output\n            const outputText = item.json.output;\n            \n            if (!outputText) {\n                console.log(`Item ${index}: No se encontró campo 'output'`);\n                return;\n            }\n            \n            // Llama a la nueva función que maneja múltiples productos\n            const parsedItems = parseMultipleProductData(outputText);\n            \n            if (parsedItems.length > 0) {\n                // Agregar cada producto individual a los resultados\n                parsedItems.forEach(product => {\n                    results.push({\n                        PRODUCTO: product.PRODUCTO,\n                        PRECIO_UNITARIO: product.PRECIO_UNITARIO,\n                        item_index: index,\n                        original_output: outputText\n                    });\n                });\n            } else {\n                console.log(`Item ${index}: No se pudieron extraer datos válidos`);\n                // Agregar item con error para tracking\n                results.push({\n                    PRODUCTO: 'ERROR_PARSING',\n                    PRECIO_UNITARIO: 0,\n                    error: 'No se pudieron extraer producto y precio',\n                    original_output: outputText,\n                    item_index: index\n                });\n            }\n            \n        } catch (error) {\n            console.log(`Error procesando item ${index}:`, error.message);\n            results.push({\n                PRODUCTO: 'ERROR',\n                PRECIO_UNITARIO: 0,\n                error: error.message,\n                item_index: index\n            });\n        }\n    });\n    \n    return results;\n}\n\n// ----> FUNCIÓN MODIFICADA <----\n// Ahora esta función procesa múltiples productos en una sola cadena de texto\nfunction parseMultipleProductData(outputText) {\n    const allProducts = [];\n    // Dividir el texto en bloques de productos, cada uno separado por dos saltos de línea\n    const productBlocks = outputText.split('\\n\\n');\n\n    productBlocks.forEach(block => {\n        const lines = block.split('\\n');\n        \n        // Asume que el primer elemento es el producto y el segundo el precio\n        if (lines.length >= 2) {\n            const productNameMatch = lines[0].match(/PRODUCTO:\\s*(.*)/i);\n            const productPriceMatch = lines[1].match(/PRECIO_UNITARIO:\\s*(\\d+)/i);\n            \n            if (productNameMatch && productPriceMatch) {\n                const productName = productNameMatch[1].trim();\n                const productPrice = parseInt(productPriceMatch[1], 10);\n\n                if (productName && !isNaN(productPrice)) {\n                    allProducts.push({\n                        PRODUCTO: productName,\n                        PRECIO_UNITARIO: productPrice\n                    });\n                }\n            }\n        }\n    });\n\n    return allProducts;\n}\n\n// Función para limpiar el nombre del producto (ya no necesaria con el nuevo enfoque)\n// function cleanProductName(producto) { ... }\n\n// Ejecutar el procesamiento\nconsole.log('Datos de entrada:', JSON.stringify(inputData, null, 2));\nconst parsedResults = parseOutputToSheetFormat(inputData);\nconsole.log('Resultados parseados:', JSON.stringify(parsedResults, null, 2));\n\n// Retornar los resultados en el formato esperado\nreturn parsedResults;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        352
+      ],
+      "id": "30827c23-8e7c-4e34-a8b9-555ebffe930a",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "120fb570-4124-4f7f-865c-21f0d0c4d879",
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}",
+              "type": "string"
+            },
+            {
+              "id": "c676aea4-4382-4b97-bb6a-0e1487b1c8e7",
+              "name": "telefono",
+              "value": "={{ $json.telefono }}",
+              "type": "string"
+            },
+            {
+              "id": "ca406d0e-3f6c-41f8-856b-9b2e963d5770",
+              "name": "instancia",
+              "value": "={{ $json.instancia }}",
+              "type": "string"
+            },
+            {
+              "id": "830bfabf-f7aa-49e5-913b-61ec8b9dae86",
+              "name": "fecha",
+              "value": "={{ $json.fecha }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        576,
+        352
+      ],
+      "id": "ec9be594-1204-484d-8f11-977fd809b7d8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8336937e-8054-4f2b-9208-2ae0b0c3ed46",
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1888,
+        368
+      ],
+      "id": "2d352e3c-d0a2-49a3-b061-46c362bb268e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Edit Fields').first().json.instancia }}",
+        "remoteJid": "={{ $('Edit Fields').first().json.telefono }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        368
+      ],
+      "id": "3d3e36ec-6d58-429a-9dba-018da6f5f40b",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "B3iSOloEJUHghytc",
+          "name": "Evolution account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crea_o_actualiza_productos": {
+      "main": [
+        [
+          {
+            "node": "crea_mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crea_mensaje": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "crea_o_actualiza_productos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0dc84cbc-4b8c-4cae-9ebf-a163b174d13b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "07f67ec32baaad4ae3d75f4e22d6ad4d1aa561c2ad8388f49ad7031ee0fe8de1"
+  },
+  "id": "VEIIikYeRQYjWSgu",
+  "tags": []
+}

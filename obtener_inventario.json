@@ -1,0 +1,155 @@
+{
+  "name": "obtener_inventario",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "mensaje"
+            },
+            {
+              "name": "telefono"
+            },
+            {
+              "name": "fecha"
+            },
+            {
+              "name": "instancia"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Negocio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1898212254,
+          "mode": "list",
+          "cachedResultName": "inventario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=1898212254"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A:D"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        352
+      ],
+      "id": "ff1ea7c2-496f-4eb8-999b-857de6212ae2",
+      "name": "obtener_inventario2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// La variable 'items' contiene los datos del nodo anterior.\nif (!Array.isArray(items) || items.length === 0) {\n    return [{\n        json: {\n            informe: \"No hay productos en stock para generar el informe.\"\n        }\n    }];\n}\n\n// Productos que deben ser excluidos del informe\nconst productosExcluidos = [\n    'arepas de queso',\n    'chorizos',\n    'arepa burguer'\n];\n\n// Función para verificar si un producto debe ser excluido\nconst debeExcluirProducto = (producto) => {\n    const productoLower = producto.toLowerCase().trim();\n    return productosExcluidos.some(excluido => \n        productoLower.includes(excluido) || excluido.includes(productoLower)\n    );\n};\n\n// Filtra solo los productos con stock disponible y excluye los productos especificados.\nconst productosConStock = items.filter(item => {\n    if (!item.json || typeof item.json.STOCK_ACTUAL_UNIDADES !== 'number' || item.json.STOCK_ACTUAL_UNIDADES <= 0) {\n        return false;\n    }\n    \n    // Excluir productos específicos\n    if (!item.json.PRODUCTO || debeExcluirProducto(item.json.PRODUCTO)) {\n        return false;\n    }\n    \n    return true;\n});\n\n// Si no hay productos con stock después del filtro, devuelve un mensaje.\nif (productosConStock.length === 0) {\n    return [{\n        json: {\n            informe: \"No hay productos en stock disponibles.\"\n        }\n    }];\n}\n\n// Construye el mensaje con el formato deseado.\nlet informe = \"📋 INVENTARIO COMPLETO:\\n\\n\";\ninforme += \"✅ **Productos con stock disponible:**\\n\\n\";\n\nproductosConStock.forEach(item => {\n    const producto = item.json;\n    informe += `• ${producto.PRODUCTO}: ${producto.STOCK_ACTUAL_UNIDADES} und\\n`;\n});\n\n// Devuelve un solo ítem con el informe en la propiedad 'json'.\nreturn [{\n    json: {\n        informe: informe.trim()\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        352
+      ],
+      "id": "8a2d84ae-71d5-4daf-989d-7a4cb39317d7",
+      "name": "Code9"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').first().json.instancia }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').first().json.telefono }}",
+        "messageText": "={{ $json.informe }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        336
+      ],
+      "id": "ddfcadf2-40d7-4c7c-983e-bfd31413614c",
+      "name": "Enviar texto2",
+      "credentials": {
+        "evolutionApi": {
+          "id": "B3iSOloEJUHghytc",
+          "name": "Evolution account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "obtener_inventario2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "obtener_inventario2": {
+      "main": [
+        [
+          {
+            "node": "Code9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code9": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "19c2fb40-d2d4-4a0a-b20a-d0a90ac9617a",
+  "meta": {
+    "instanceId": "07f67ec32baaad4ae3d75f4e22d6ad4d1aa561c2ad8388f49ad7031ee0fe8de1"
+  },
+  "id": "1xCDK2DGnsJt4GD0",
+  "tags": []
+}

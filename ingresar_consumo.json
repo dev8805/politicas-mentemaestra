@@ -1,0 +1,558 @@
+{
+  "name": "ingresar_consumo",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "mensaje"
+            },
+            {
+              "name": "fecha"
+            },
+            {
+              "name": "instancia"
+            },
+            {
+              "name": "telefono"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -224,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.mensaje }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=### 🎯 FORMATO DE SALIDA\nTransforma {{ $json.mensaje }} al formato: \"Producto\" cantidad, \"Producto\" cantidad\n\n## GLOSARIO INTERNO\n- **combo** = 1 chorizo + 1 arepa\n## EJEMPLOS COMPLETOS:\n**Entrada:** \"4 combos  y 1 Gaseosas MEGA 2.5\"\n**Salida:** \"Arepas de QUESO\" 4, \"Chorizos\" 4, \"Gaseosas MEGA 2.5\" 1\n\n**Entrada:** \"1 combo  y 1 Gaseosas 350ml\"\n**Salida:** \"Arepas de QUESO\" 1, \"Chorizos\" 1, \"Gaseosas 350ml\" 1\n\n**Entrada:** \"1 Arepa BURGUER\"\n**Salida:** \"Arepa BURGUER\" 1\n\n**REGLAS:**\n- Comillas dobles obligatorias: \"Chorizos\"\n- Espacio tras comillas: \"Chorizos\" 3\n- Coma+espacio entre productos: , \"\n- Sin saltos de línea\n- Mantener mayúsculas/minúsculas exactas\n\n**EJEMPLO:**\n- **Entrada:** \"4 Gaseosas 250ml y 2 Gaseosas MEGA 2.5\"\n- **Salida:** \"Gaseosas 250ml\" 4, \"Gaseosas MEGA 2.5\" 2"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        368
+      ],
+      "id": "965911ba-bb5c-4bfe-9cf4-2ddac666c21e",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        160,
+        560
+      ],
+      "id": "db9680b8-e926-4e86-a17c-22c98caca869",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Capturamos el texto desde la propiedad correcta\nconst texto = String($input.first().json.output || '').trim();\n\n// Regex para extraer \"producto\" cantidad\nconst regex = /\"([^\"]+)\"\\s+(\\d+(?:\\.\\d+)?)/g;\n\nconst filas = [];\nlet match;\n\nwhile ((match = regex.exec(texto)) !== null) {\n  filas.push({\n    PRODUCTO: match[1].replace(/_/g, ' '),\n    CANTIDAD: parseFloat(match[2]),\n    FECHA: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' })\n  });\n}\n\nreturn filas;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        368
+      ],
+      "id": "17973ed8-ec87-4655-b7e8-053d3b1cf74a",
+      "name": "Code_ventas1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Negocio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 556520416,
+          "mode": "list",
+          "cachedResultName": "consumo_personal",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=556520416"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CANTIDAD": "={{ $json.CANTIDAD }}",
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "FECHA": "={{ $json.FECHA }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "CANTIDAD",
+              "displayName": "CANTIDAD",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FECHA",
+              "displayName": "FECHA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        688,
+        368
+      ],
+      "id": "7b3ab619-90de-45e9-af5a-f9ab40abc671",
+      "name": "ingresa_consumos_personales",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Negocio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1898212254,
+          "mode": "list",
+          "cachedResultName": "inventario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=1898212254"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A:D"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        912,
+        432
+      ],
+      "id": "944eaf4f-b552-4ee1-80f0-fe54ea186e9b",
+      "name": "obtener_inventario1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Acceder a TODOS los items del nodo de consumos\nlet consumosPersonales = [];\n\n// Usar $items para obtener todos los items del nodo específico\ntry {\n  const todosLosConsumos = $items(\"ingresa_consumos_personales\");\n  if (todosLosConsumos && Array.isArray(todosLosConsumos)) {\n    consumosPersonales = todosLosConsumos.map(item => item.json);\n  }\n} catch (error) {\n  // Método fallback si $items no funciona\n  const consumosDirectos = $node[\"ingresa_consumos_personales\"];\n  if (consumosDirectos && consumosDirectos.json) {\n    consumosPersonales = [consumosDirectos.json];\n  }\n}\n\n// Procesar inventario (extraer datos json)\nconst inventarioData = $input.all();\nconst inventarioItems = [];\n\ninventarioData.forEach(item => {\n  if (item.json && item.json.STOCK_ACTUAL_UNIDADES !== undefined) {\n    inventarioItems.push(item.json);\n  }\n});\n\n// Verificar que tenemos datos válidos - mejorar el manejo de errores\nif (consumosPersonales.length === 0) {\n  // Si no hay consumos, no hacer nada y retornar vacío (no error)\n  return [];\n}\n\nif (inventarioItems.length === 0) {\n  // Si no hay inventario aún, no hacer nada y retornar vacío (no error)\n  return [];\n}\n\n// Eliminar duplicados del inventario basándose en PRODUCTO y row_number\nconst inventarioSinDuplicados = inventarioItems.filter((item, index, self) => \n  index === self.findIndex(i => i.PRODUCTO === item.PRODUCTO && i.row_number === item.row_number)\n);\n\n// Crear un mapa de consumos por producto\nconst consumosPorProducto = {};\nconsumosPersonales.forEach(consumo => {\n  const producto = consumo.PRODUCTO;\n  const cantidad = consumo.CANTIDAD;\n  \n  if (consumosPorProducto[producto]) {\n    consumosPorProducto[producto] += cantidad;\n  } else {\n    consumosPorProducto[producto] = cantidad;\n  }\n});\n\n// Procesar el inventario y descontar los consumos\nconst inventarioActualizado = inventarioSinDuplicados.map(item => {\n  const producto = item.PRODUCTO;\n  const stockActual = item.STOCK_ACTUAL_UNIDADES;\n  \n  // Verificar si este producto fue consumido\n  if (consumosPorProducto[producto]) {\n    const cantidadConsumida = consumosPorProducto[producto];\n    const nuevoStock = Math.max(0, stockActual - cantidadConsumida);\n    \n    return {\n      ...item,\n      STOCK_ACTUAL_UNIDADES: nuevoStock\n    };\n  }\n  \n  // Si no fue consumido, mantener el stock actual\n  return item;\n});\n\n// Retornar solo el inventario actualizado\nreturn inventarioActualizado;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        368
+      ],
+      "id": "d9f0e646-0691-453c-ab03-1745549f4f79",
+      "name": "Procesar_actualizacion_inventario1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Negocio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1898212254,
+          "mode": "list",
+          "cachedResultName": "inventario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=1898212254"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "UNIDAD_MEDIDA": "={{ $json.UNIDAD_MEDIDA }}",
+            "FACTOR_UNIDADES": "={{ $json.FACTOR_UNIDADES }}",
+            "STOCK_ACTUAL_UNIDADES": "={{ $json.STOCK_ACTUAL_UNIDADES }}",
+            "PRECIO_ULTIMA_COMPRA": "={{ $json.PRECIO_ULTIMA_COMPRA }}",
+            "FECHA_ULTIMA_COMPRA": "={{ $json.FECHA_ULTIMA_COMPRA }}"
+          },
+          "matchingColumns": [
+            "PRODUCTO"
+          ],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "UNIDAD_MEDIDA",
+              "displayName": "UNIDAD_MEDIDA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FACTOR_UNIDADES",
+              "displayName": "FACTOR_UNIDADES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "STOCK_ACTUAL_UNIDADES",
+              "displayName": "STOCK_ACTUAL_UNIDADES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PRECIO_ULTIMA_COMPRA",
+              "displayName": "PRECIO_ULTIMA_COMPRA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FECHA_ULTIMA_COMPRA",
+              "displayName": "FECHA_ULTIMA_COMPRA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1360,
+        368
+      ],
+      "id": "d39bb607-e58e-485f-86a1-b754ea24ab4c",
+      "name": "Update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener los datos de los consumos y el inventario actualizado\nconst consumosData = $items(\"ingresa_consumos_personales\");\nconst inventarioActualizado = $input.all();\n\n// Obtener fecha y hora actual en zona horaria de Bogotá\nconst fechaHora = new Date().toLocaleString('es-CO', {\n  timeZone: 'America/Bogota',\n  day: '2-digit',\n  month: '2-digit', \n  year: 'numeric',\n  hour: '2-digit',\n  minute: '2-digit',\n  second: '2-digit',\n  hour12: true\n});\n\n// Crear mapa del inventario actualizado por producto\nconst stockActualizado = {};\ninventarioActualizado.forEach(item => {\n  if (item.json) {\n    stockActualizado[item.json.PRODUCTO] = item.json.STOCK_ACTUAL_UNIDADES;\n  }\n});\n\n// Lista de productos que NO deben mostrar nuevoStock\nconst productosSinNuevoStock = [\"Arepas de QUESO\", \"Arepa BURGUER\", \"Chorizos\"];\n\n// Generar líneas de confirmación para cada consumo\nconst lineasConfirmacion = consumosData.map(consumo => {\n  const producto = consumo.json.PRODUCTO;\n  const cantidad = consumo.json.CANTIDAD;\n  const nuevoStock = stockActualizado[producto] || 'N/A';\n\n  if (productosSinNuevoStock.includes(producto)) {\n    return `${cantidad} ${producto}`;\n  } else {\n    return `${cantidad} ${producto} / nuevoStock : ${nuevoStock}`;\n  }\n});\n\n// Construir el mensaje completo\nconst mensaje = [\n  \"✅ Registro de consumo personal\",\n  fechaHora,\n  \"\",  // Línea vacía para agregar espacio\n  ...lineasConfirmacion\n].join('\\n');\n\n// Retornar el mensaje\nreturn [{ \n  mensaje: mensaje,\n  timestamp: fechaHora,\n  consumosRegistrados: lineasConfirmacion.length\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        368
+      ],
+      "id": "f1e1d656-fb57-46af-a005-edc052244761",
+      "name": "Code6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a3ccdf74-ab37-47af-aab9-b14e38808cd7",
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}",
+              "type": "string"
+            },
+            {
+              "id": "6011c99a-1022-4fad-b11c-540794666bfc",
+              "name": "fecha",
+              "value": "={{ $json.fecha }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        368
+      ],
+      "id": "286b6de5-677c-4b44-9c57-1e26f92fdb99",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "19979410-c550-49a0-b457-6fd77e30b791",
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        368
+      ],
+      "id": "55678412-8ecf-41d1-bec0-887473b17ffd",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').first().json.instancia }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').first().json.telefono }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        368
+      ],
+      "id": "94c21b25-a6db-4c62-9866-d84480202def",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "B3iSOloEJUHghytc",
+          "name": "Evolution account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Code_ventas1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code_ventas1": {
+      "main": [
+        [
+          {
+            "node": "ingresa_consumos_personales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ingresa_consumos_personales": {
+      "main": [
+        [
+          {
+            "node": "obtener_inventario1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Procesar_actualizacion_inventario1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "obtener_inventario1": {
+      "main": [
+        [
+          {
+            "node": "Procesar_actualizacion_inventario1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar_actualizacion_inventario1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "be97be52-089b-46d5-b9fe-d432e1a48fd9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "07f67ec32baaad4ae3d75f4e22d6ad4d1aa561c2ad8388f49ad7031ee0fe8de1"
+  },
+  "id": "eEPLO5jaUFJzMEZq",
+  "tags": []
+}
