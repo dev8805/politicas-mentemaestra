@@ -1,0 +1,711 @@
+{
+  "name": "crear_producto",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b8ee063b-7291-4ab2-b41f-218cc6291195",
+              "name": "PRODUCTO",
+              "value": "={{ $json['Nombre original del producto'] }}",
+              "type": "string"
+            },
+            {
+              "id": "b7c9558a-95d7-48ef-be15-94d27f976bdd",
+              "name": "UNIDAD_MEDIDA",
+              "value": "={{ $json['En que presentación viene'] }}",
+              "type": "string"
+            },
+            {
+              "id": "1110ef4a-d482-42ee-96a8-9c0114ca78bd",
+              "name": "CANTIDAD",
+              "value": "={{ $json['Cantidad de cajas, pacas a  ingresar al inventario'] }}",
+              "type": "number"
+            },
+            {
+              "id": "06b0b81d-9f1b-4334-8991-c27a3b9216e0",
+              "name": "FACTOR_UNIDADES",
+              "value": "={{ $json['Cuantas unidades vienen en la caja, paca, bolsa etc'] }}",
+              "type": "number"
+            },
+            {
+              "id": "44be73a8-bd62-4bf0-9975-129c6ce683eb",
+              "name": "APODO",
+              "value": "={{ $json['De que otras formas se quiere referir al producto'] }}",
+              "type": "string"
+            },
+            {
+              "id": "9bac2c65-433e-41b9-983a-5e33ca838cfb",
+              "name": "Precio",
+              "value": "={{ $json['Precio por unidad'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        544,
+        352
+      ],
+      "id": "0ecc1fd6-d66f-44ea-a651-bdb289157f35",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "formTitle": "Crear producto nuevo",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nombre original del producto",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "En que presentación viene",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Cajas"
+                  },
+                  {
+                    "option": "Pacas"
+                  },
+                  {
+                    "option": "Bolsas"
+                  },
+                  {
+                    "option": "Unidades"
+                  },
+                  {
+                    "option": "Paquetes"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Cantidad de cajas, pacas a  ingresar al inventario",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Cuantas unidades vienen en la caja, paca, bolsa etc",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "De que otras formas se quiere referir al producto",
+              "placeholder": "ejemplo: cigarro, cigarrillo, mustang",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Precio por unidad",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Teléfono para confirmar el ingreso",
+              "fieldType": "number"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        160
+      ],
+      "id": "9ddb6d8b-1f3a-4a38-9cf4-cf7cd640aee2",
+      "name": "On form submission",
+      "webhookId": "084c7fb5-5b09-462b-bbc7-8378fe372e60"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "232329bf-41c0-4fc0-8356-29c5093d10a5",
+              "name": "PRODUCTO",
+              "value": "={{ $json['Nombre original del producto'] }}",
+              "type": "string"
+            },
+            {
+              "id": "9b8362e5-fbfe-424a-a245-6d4d74b53fd7",
+              "name": "PRECIO_UNITARIO",
+              "value": "={{ $json['Precio por unidad'] }}",
+              "type": "number"
+            },
+            {
+              "id": "64dde1ca-ae7c-4940-a0c1-c8ff648b998c",
+              "name": "APODO",
+              "value": "={{ $json['De que otras formas se quiere referir al producto'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        160
+      ],
+      "id": "41ecefce-bec0-45cb-9aff-8745eb0aad1b",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener todos los items de entrada\nconst items = $input.all();\n\n// Procesar cada item\nconst resultados = items.map(item => {\n  const data = item.json;\n  \n  // Extraer valores necesarios\n  const cantidad = Number(data.CANTIDAD) || 0;\n  const factorUnidades = Number(data.FACTOR_UNIDADES) || 0;\n  \n  // Calcular stock actual\n  const stockActualUnidades = cantidad * factorUnidades;\n  \n  // Retornar objeto con todas las variables originales + la nueva\n  return {\n    json: {\n      PRODUCTO: data.PRODUCTO,\n      UNIDAD_MEDIDA: data.UNIDAD_MEDIDA,\n      CANTIDAD: data.CANTIDAD,\n      FACTOR_UNIDADES: data.FACTOR_UNIDADES,\n      APODO: data.APODO,\n      STOCK_ACTUAL_UNIDADES: stockActualUnidades\n    }\n  };\n});\n\nreturn resultados;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        352
+      ],
+      "id": "b7e40646-4824-4a0f-be1a-60a28c144e40",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Negocio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1898212254,
+          "mode": "list",
+          "cachedResultName": "inventario",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=1898212254"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "UNIDAD_MEDIDA": "={{ $json.UNIDAD_MEDIDA }}",
+            "FACTOR_UNIDADES": "={{ $json.FACTOR_UNIDADES }}",
+            "STOCK_ACTUAL_UNIDADES": "={{ $json.STOCK_ACTUAL_UNIDADES }}",
+            "APODOS Y REFERENCIAS": "={{ $json.APODO }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UNIDAD_MEDIDA",
+              "displayName": "UNIDAD_MEDIDA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FACTOR_UNIDADES",
+              "displayName": "FACTOR_UNIDADES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "STOCK_ACTUAL_UNIDADES",
+              "displayName": "STOCK_ACTUAL_UNIDADES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "APODOS Y REFERENCIAS",
+              "displayName": "APODOS Y REFERENCIAS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        944,
+        352
+      ],
+      "id": "724d8d15-05a1-4aad-b5bb-03855249fbf7",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Gerson_cuentas",
+        "remoteJid": "={{ ($('On form submission').item.json['Teléfono para confirmar el ingreso'].toString().replace(/[\\s\\-\\(\\)]/g, '').startsWith('57') ? $('On form submission').item.json['Teléfono para confirmar el ingreso'].toString().replace(/[\\s\\-\\(\\)]/g, '') : '57' + $('On form submission').item.json['Teléfono para confirmar el ingreso'].toString().replace(/[\\s\\-\\(\\)]/g, '')) }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        352
+      ],
+      "id": "07f5979e-8fcb-434a-9215-e7faaea8c8cc",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "B3iSOloEJUHghytc",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "21191951-ce5b-43c6-a8d0-e9ccd3d361e6",
+              "name": "mensaje",
+              "value": "=✅ Registro exitoso de nuevo producto a INVENTARIO\n\nPRODUCTO: {{ $json.PRODUCTO }}\nPRESENTACION: {{ $json.UNIDAD_MEDIDA }}X{{ $json.FACTOR_UNIDADES }}\nSTOCK ACTUAL: {{ $json.STOCK_ACTUAL_UNIDADES }} unidades\nPRECIO: {{ $('Edit Fields').item.json.Precio }}\nAPODO/S: {{ $json['APODOS Y REFERENCIAS'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        352
+      ],
+      "id": "83f648e3-6181-4937-875a-2cc2a15f4df7",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg",
+          "mode": "list",
+          "cachedResultName": "Ventas_Negocio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 517997965,
+          "mode": "list",
+          "cachedResultName": "lista_precios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vrZgWkcv2TYE1-MJ7Rc_dcpvvPx28lP_P4bkaaXNwOg/edit#gid=517997965"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PRODUCTO": "={{ $json.PRODUCTO }}",
+            "PRECIO_UNITARIO": "={{ $json.PRECIO_UNITARIO }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "PRODUCTO",
+              "displayName": "PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PRECIO_UNITARIO",
+              "displayName": "PRECIO_UNITARIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        752,
+        160
+      ],
+      "id": "d6d5c2a7-7973-43c1-a319-4811c5d47068",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "232329bf-41c0-4fc0-8356-29c5093d10a5",
+              "name": "PRODUCTO",
+              "value": "={{ $json['Nombre original del producto'] }}",
+              "type": "string"
+            },
+            {
+              "id": "64dde1ca-ae7c-4940-a0c1-c8ff648b998c",
+              "name": "APODO",
+              "value": "={{ $json['De que otras formas se quiere referir al producto'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        -32
+      ],
+      "id": "5505c49d-dfe9-4a06-8eb9-bfd3fcf12197",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1vkj-0XG2xG8AixToCz2oy_e6dbo8a7Nf500tXRg7W2A",
+          "mode": "list",
+          "cachedResultName": "APODOS Y REFERENCIAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vkj-0XG2xG8AixToCz2oy_e6dbo8a7Nf500tXRg7W2A/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vkj-0XG2xG8AixToCz2oy_e6dbo8a7Nf500tXRg7W2A/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "REFERENCIAS_Y_APODOS": "={{ $json.APODO }}",
+            "NOMBRE DE PRODUCTO": "={{ $json.PRODUCTO }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NOMBRE DE PRODUCTO",
+              "displayName": "NOMBRE DE PRODUCTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "REFERENCIAS_Y_APODOS",
+              "displayName": "REFERENCIAS_Y_APODOS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        -32
+      ],
+      "id": "725e45f5-568c-4da2-822b-0fd94466af9e",
+      "name": "Append row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LlPPAlxZCKB3BTUm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "apodos_productos",
+          "mode": "list",
+          "cachedResultName": "apodos_productos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "activo": false
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "producto",
+              "displayName": "producto",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "apodo",
+              "displayName": "apodo",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fuente",
+              "displayName": "fuente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_creacion",
+              "displayName": "fecha_creacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "activo",
+              "displayName": "activo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        944,
+        -32
+      ],
+      "id": "440b190f-19ab-4199-af58-1f4e9f4e6a9e",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "QYN0UhXauGwlSaLm",
+          "name": "transito"
+        }
+      },
+      "disabled": true
+    }
+  ],
+  "pinData": {
+    "On form submission": [
+      {
+        "json": {
+          "Nombre original del producto": "Agua 600ml sin gas",
+          "En que presentación viene": "Pacas",
+          "Cantidad de cajas, pacas a  ingresar al inventario": 2,
+          "Cuantas unidades vienen en la caja, paca, bolsa etc": 12,
+          "De que otras formas se quiere referir al producto": "Agua natural, botella de agua, botellas de agua, agua 600,agua sin gas",
+          "Precio por unidad": 2500,
+          "Teléfono para confirmar el ingreso": 3103015865,
+          "submittedAt": "2025-09-15T13:28:24.202-04:00",
+          "formMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "95617a69-a568-41f6-bb96-337594c2aaec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "07f67ec32baaad4ae3d75f4e22d6ad4d1aa561c2ad8388f49ad7031ee0fe8de1"
+  },
+  "id": "yoQQUmd6cLNEqXK5",
+  "tags": []
+}
