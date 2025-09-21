@@ -1,0 +1,798 @@
+{
+  "name": "Registra_ventas",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "mensaje"
+            },
+            {
+              "name": "numero_telefono"
+            },
+            {
+              "name": "date_time"
+            },
+            {
+              "name": "instancia"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4df07822-8763-486d-b9f4-8255febbd98e",
+              "name": "final_message",
+              "value": "={{ $json.mensaje }}",
+              "type": "string"
+            },
+            {
+              "id": "67ef701a-d09e-40db-82a9-cbd519b36488",
+              "name": "wa_id",
+              "value": "={{ $json.numero_telefono }}",
+              "type": "string"
+            },
+            {
+              "id": "99a328cc-a6e0-4617-945e-1e2059367a83",
+              "name": "date_time",
+              "value": "={{ $json.date_time.split('/').reverse().join('-') }}\n",
+              "type": "string"
+            },
+            {
+              "id": "99a1be42-9f08-40f1-b3be-fb9703518502",
+              "name": "instancia",
+              "value": "={{ $json.instancia }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        352
+      ],
+      "id": "1356ac24-baa9-400a-919a-01f51afc23f2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        512,
+        576
+      ],
+      "id": "40975211-053c-4354-85bc-37283408c23e",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "taiVmaaeYJaTZiam",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Capturamos el texto desde la propiedad correcta\nconst texto = String($input.first().json.output || '').trim();\n\n// Regex para extraer \"producto\" cantidad\nconst regex = /\"([^\"]+)\"\\s+(\\d+(?:\\.\\d+)?)/g;\n\nconst filas = [];\nlet match;\n\nwhile ((match = regex.exec(texto)) !== null) {\n  filas.push({\n    PRODUCTO: match[1].replace(/_/g, ' '),\n    CANTIDAD: parseFloat(match[2]),\n    FECHA: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' })\n  });\n}\n\nreturn filas;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        352
+      ],
+      "id": "57669e4c-65af-401b-b841-1966d050d345",
+      "name": "Code_ventas"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos todas las ventas desde Code_ventas\nconst ventas = $('Code_ventas').all().map(item => item.json);\n\n// CAMBIO: Obtenemos los precios desde el input actual (Merge)\nconst precios = $input.all().map(item => item.json);\n\n// Función para buscar el precio y costo de un producto\nfunction buscarPrecio(nombreProducto) {\n  const nombreVenta = nombreProducto.toLowerCase().replace(/_/g, ' ').trim();\n  \n  for (const p of precios) {\n    const nombrePrecio = p.PRODUCTO.toLowerCase().replace(/_/g, ' ').trim();\n    if (nombrePrecio === nombreVenta) {\n      return {\n        precio: parseFloat(p.PRECIO_UNITARIO),\n        costo: parseFloat(p.COSTO || 0),\n        error: false,\n        productoEncontrado: p.PRODUCTO\n      };\n    }\n  }\n  \n  // Si no se encuentra, devuelve error\n  return { \n    precio: 0, \n    costo: 0, \n    error: true,\n    productoEncontrado: null\n  };\n}\n\n// Procesamos todas las ventas\nreturn ventas.map(v => {\n  const resultado = buscarPrecio(v.PRODUCTO);\n  \n  if (resultado.error) {\n    return {\n      json: {\n        PRODUCTO: v.PRODUCTO,\n        CANTIDAD: Number(v.CANTIDAD),\n        VALOR_UNITARIO: 0,\n        VALOR_TOTAL: 0,\n        COSTO: 0,\n        FECHA: v.FECHA,\n        ERROR: true,\n        MENSAJE_ERROR: `${v.PRODUCTO}: No existe en el inventario. AGREGA el APODO ${v.PRODUCTO} al PRODUCTO que pertenezca en el siguiente link : https://docs.google.com/spreadsheets/d/1vkj-0XG2xG8AixToCz2oy_e6dbo8a7Nf500tXRg7W2A/edit?usp=sharing`\n      }\n    };\n  }\n  \n  const valorTotal = Number(v.CANTIDAD) * resultado.precio;\n  \n  return {\n    json: {\n      PRODUCTO: v.PRODUCTO,\n      CANTIDAD: Number(v.CANTIDAD),\n      VALOR_UNITARIO: resultado.precio,\n      VALOR_TOTAL: valorTotal,\n      COSTO: resultado.costo,\n      FECHA: v.FECHA,\n      ERROR: false,\n      MENSAJE: null\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        368
+      ],
+      "id": "43bc0ab2-b6dc-439c-ade3-1f376cbea4e7",
+      "name": "Cruce_precio_venta"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.final_message }}",
+        "options": {
+          "systemMessage": "=# INSTRUCCIONES PARA TRANSFORMAR VENTAS\nTu labor es transformar el mensaje {{ $json.final_message }} de ventas siguiendo **EXACTAMENTE** el formato especificado.\n\n## GLOSARIO INTERNO\n- **combo** = 1 chorizo + 1 arepa\n## EJEMPLOS COMPLETOS:\n**Entrada:** \"4 combos  y 1 Gaseosas MEGA 2.5\"\n**Salida:** \"Arepas de QUESO\" 4, \"Chorizos\" 4, \"Gaseosas MEGA 2.5\" 1\n\n**Entrada:** \"1 combo  y 1 Gaseosas 350ml\"\n**Salida:** \"Arepas de QUESO\" 1, \"Chorizos\" 1, \"Gaseosas 350ml\" 1\n\n**Entrada:** \"1 Arepa BURGUER\"\n**Salida:** \"Arepa BURGUER\" 1\n\n\n## FORMATO DE SALIDA OBLIGATORIO\n**ESTRUCTURA:** \"NombreProducto\" cantidad, \"NombreProducto\" cantidad\n\n**REGLAS ESTRICTAS:**\n1. Cada producto entre comillas dobles: \"Chorizos\"\n2. Espacio después de las comillas: \"Chorizos\" 3\n3. Coma y espacio entre productos: , \"\n4. NO agregar saltos de línea (\\n)\n5. NO cambiar mayúsculas/minúsculas de los nombres de productos\n\n## EJEMPLOS COMPLETOS:\n**Entrada:** \"4 chorizos  y 1 Gaseosas MEGA 2.5\"\n**Salida:** \"Chorizos\" 4, \"Gaseosas MEGA 2.5\" 1\n\n\n## IMPORTANTE:\n- Devuelve ÚNICAMENTE el formato de salida especificado\n- NO agregues explicaciones\n- NO agregues saltos de línea\n- RESPETA exactamente las comillas y espacios"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        352
+      ],
+      "id": "943a0f64-7dc4-4d83-a816-9d2e3eb54d11",
+      "name": "LIMPIA MENSAJE DE VENTA"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Código para nodo Code de n8n - Confirmación de Ventas (con STOCK_ACTUAL_UNIDADES)\n// Obtener los datos de entrada\nconst inputData = $input.all();\n\n// Arrays para procesar los datos\nconst ventasItems = [];\nlet totalGeneral = 0;\n\n// Productos que no deben mostrar stock\nconst productosExcluidosStock = [\n  'arepas de queso',\n  'arepa de queso',\n  'chorizo',\n  'chorizos',\n  'arepa burguer'\n];\n\n// Función para verificar si un producto debe excluir el stock\nconst debeExcluirStock = (producto) => {\n  const productoLower = producto.toLowerCase().trim();\n  return productosExcluidosStock.some(excluido => \n    productoLower.includes(excluido) || excluido.includes(productoLower)\n  );\n};\n\n// Función para manejar plurales\nconst manejarPlural = (cantidad, producto) => {\n  const cantidadNum = parseInt(cantidad);\n  if (cantidadNum === 1) {\n    const palabras = producto.trim().split(' ');\n    let primeraPalabra = palabras[0];\n    if (primeraPalabra.endsWith('s') && primeraPalabra.length > 1) {\n      const excepcionesS = ['lapis', 'virus', 'tesis', 'crisis', 'oasis', 'martes', 'miercoles', 'jueves', 'viernes'];\n      const palabraLower = primeraPalabra.toLowerCase();\n      if (!excepcionesS.some(excepcion => palabraLower.includes(excepcion))) {\n        if (primeraPalabra.endsWith('es') && primeraPalabra.length > 2) {\n          const antesDe_es = primeraPalabra[primeraPalabra.length - 3];\n          if (!'aeiouáéíóú'.includes(antesDe_es.toLowerCase())) {\n            primeraPalabra = primeraPalabra.slice(0, -2);\n          } else {\n            primeraPalabra = primeraPalabra.slice(0, -1);\n          }\n        } else {\n          primeraPalabra = primeraPalabra.slice(0, -1);\n        }\n      }\n    }\n    palabras[0] = primeraPalabra;\n    return palabras.join(' ');\n  }\n  return producto;\n};\n\n// Procesar cada fila de datos\nfor (const item of inputData) {\n  const { \n    CANTIDAD, \n    PRODUCTO, \n    VALOR_UNITARIO, \n    VALOR_TOTAL,\n    STOCK_ACTUAL_UNIDADES\n  } = item.json;\n\n  // Validar que todos los campos necesarios estén presentes\n  if (!CANTIDAD || !PRODUCTO || !VALOR_TOTAL || STOCK_ACTUAL_UNIDADES == null) {\n    console.log('Datos incompletos en una fila:', item.json);\n    continue;\n  }\n\n  // Formatear valores monetarios\n  const formatCurrency = (value) => {\n    return Number(value).toLocaleString('es-CO');\n  };\n\n  // Manejar plural/singular del producto\n  const productoFormateado = manejarPlural(CANTIDAD, PRODUCTO);\n  \n  // Crear item con o sin stock según el producto\n  let itemFormateado;\n  if (debeExcluirStock(PRODUCTO)) {\n    itemFormateado = `- ${parseInt(CANTIDAD)} ${productoFormateado} = ${formatCurrency(VALOR_TOTAL)}`;\n  } else {\n    itemFormateado = `- ${parseInt(CANTIDAD)} ${productoFormateado} = ${formatCurrency(VALOR_TOTAL)} (Stock actual: ${STOCK_ACTUAL_UNIDADES})`;\n  }\n  \n  ventasItems.push(itemFormateado);\n  \n  // Sumar al total general\n  totalGeneral += Number(VALOR_TOTAL);\n}\n\n// Formatear el total general\nconst totalFormateado = totalGeneral.toLocaleString('es-CO');\n\n// Crear mensaje con formato HTML para Telegram\nlet mensajeHTML = '<b>✅ Registro de ventas:</b>\\n\\n';\nventasItems.forEach(item => {\n  mensajeHTML += `<code>${item}</code>\\n`;\n});\nmensajeHTML += `\\n<b>💰 Total de la venta: $ ${totalFormateado}</b>`;\n\n// Crear mensaje de texto plano (backup)\nlet mensajeTexto = '✅ Registro de ventas:\\n\\n';\nmensajeTexto += ventasItems.join('\\n');\nmensajeTexto += `\\n\\n💰 Total de la venta: $ ${totalFormateado}`;\n\n// Crear objeto de respuesta\nconst resultado = {\n  mensaje_html: mensajeHTML,\n  mensaje_texto: mensajeTexto,\n  parse_mode: 'HTML',\n  total_venta: totalGeneral,\n  cantidad_items: ventasItems.length,\n  items: ventasItems,\n  fecha_registro: new Date().toLocaleDateString('es-CO'),\n  hora_registro: new Date().toLocaleTimeString('es-CO', {\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: true\n  })\n};\n\n// Retornar resultado en formato n8n\nreturn [{ json: resultado }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4064,
+        400
+      ],
+      "id": "43719aa5-32fe-4c88-aa5c-f2bbeaf0a00c",
+      "name": "mensaje_confirmacion1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== RESTAR VENTAS DEL INVENTARIO - VERSIÓN CORREGIDA =====\nconsole.log('=== INICIO: ACTUALIZAR INVENTARIO CON VENTAS ===');\n\ntry {\n  // 1. OBTENER VENTAS DESDE EL NODO ANTERIOR EN EL FLUJO\n  console.log('1. Obteniendo ventas...');\n  \n  // Como Postgres solo devuelve success, necesitamos obtener las ventas de otro lugar\n  // Buscar en el flujo el nodo que tenga los datos de ventas\n  let ventasData = [];\n  \n  try {\n    // Intentar obtener desde Cruce_precio_venta (nodo anterior a Postgres)\n    ventasData = $('Cruce_precio_venta').all();\n    console.log('✅ Ventas obtenidas desde Cruce_precio_venta:', ventasData?.length || 0, 'registros');\n  } catch (e) {\n    console.log('⚠️ No se pudieron obtener ventas desde Cruce_precio_venta');\n    return $input.all(); // Devolver inventario sin cambios\n  }\n\n  // 2. OBTENER INVENTARIO DESDE EL INPUT ACTUAL (MERGE)\n  console.log('2. Obteniendo inventario actual...');\n  const inventarioDataRaw = $input.all();\n  console.log('✅ Inventario obtenido (raw):', inventarioDataRaw?.length || 0, 'registros');\n  \n  // ======= DEDUPLICAR INVENTARIO =======\n  console.log('3. Deduplicando inventario...');\n  const inventarioMap = new Map();\n  \n  inventarioDataRaw.forEach((item, index) => {\n    const producto = item.json.PRODUCTO;\n    const rowNumber = item.json.row_number;\n    \n    if (producto) {\n      const key = rowNumber ? `${producto}_${rowNumber}` : producto;\n      \n      if (!inventarioMap.has(key)) {\n        inventarioMap.set(key, item);\n        console.log(`📝 Agregado: ${producto} (row: ${rowNumber})`);\n      } else {\n        console.log(`⚠️ Duplicado ignorado: ${producto} (row: ${rowNumber})`);\n      }\n    }\n  });\n  \n  const inventarioData = Array.from(inventarioMap.values());\n  console.log('✅ Inventario deduplicado:', inventarioData.length, 'registros únicos');\n\n  // 3. VALIDACIONES\n  if (!ventasData || ventasData.length === 0) {\n    console.log('⚠️ No hay ventas para procesar - RETORNANDO INVENTARIO SIN CAMBIOS');\n    return inventarioData;\n  }\n\n  if (!inventarioData || inventarioData.length === 0) {\n    console.log('❌ No hay inventario para actualizar');\n    return [];\n  }\n\n  // 4. CONSOLIDAR VENTAS POR PRODUCTO\n  console.log('4. Consolidando ventas por producto...');\n  const ventasConsolidadas = {};\n  \n  ventasData.forEach((venta, ventaIndex) => {\n    const productoVenta = venta.json.PRODUCTO;\n    const cantidadVenta = parseInt(venta.json.CANTIDAD) || 0;\n    \n    console.log(`🔍 Venta ${ventaIndex + 1}: ${productoVenta} - ${cantidadVenta} unidades`);\n    \n    if (!ventasConsolidadas[productoVenta]) {\n      ventasConsolidadas[productoVenta] = 0;\n    }\n    ventasConsolidadas[productoVenta] += cantidadVenta;\n  });\n  \n  console.log('📋 Ventas consolidadas:', ventasConsolidadas);\n\n  // 5. APLICAR DESCUENTOS AL INVENTARIO\n  console.log('5. Aplicando descuentos al inventario...');\n  const inventarioActualizado = [];\n  const productosActualizados = [];\n\n  inventarioData.forEach((itemInventario, index) => {\n    const productoInventario = itemInventario.json.PRODUCTO;\n    let nuevoItem = { ...itemInventario.json };\n    \n    if (ventasConsolidadas.hasOwnProperty(productoInventario)) {\n      const cantidadTotalVendida = ventasConsolidadas[productoInventario];\n      const stockActual = parseInt(itemInventario.json.STOCK_ACTUAL_UNIDADES) || 0;\n      const nuevoStock = stockActual - cantidadTotalVendida;\n      \n      console.log(`📊 ${productoInventario}: ${stockActual} → ${nuevoStock} (vendido: ${cantidadTotalVendida})`);\n      \n      nuevoItem.STOCK_ACTUAL_UNIDADES = nuevoStock;\n      \n      productosActualizados.push({\n        producto: productoInventario,\n        stockAnterior: stockActual,\n        cantidadVendida: cantidadTotalVendida,\n        stockNuevo: nuevoStock,\n        rowNumber: nuevoItem.row_number\n      });\n      \n      delete ventasConsolidadas[productoInventario];\n    }\n    \n    inventarioActualizado.push({ json: nuevoItem });\n  });\n\n  console.log(`\\n📊 RESUMEN DE ACTUALIZACIÓN:`);\n  console.log(`   Productos actualizados: ${productosActualizados.length}`);\n  \n  if (productosActualizados.length > 0) {\n    console.log('\\n✅ PRODUCTOS ACTUALIZADOS:');\n    productosActualizados.forEach(item => {\n      console.log(`   - ${item.producto} (fila ${item.rowNumber}): ${item.stockAnterior} → ${item.stockNuevo} (-${item.cantidadVendida})`);\n    });\n  }\n\n  console.log('=== FIN: ACTUALIZAR INVENTARIO CON VENTAS ===');\n  \n  return inventarioActualizado;\n\n} catch (error) {\n  console.log('❌ ERROR GENERAL:', error.message);\n  return [{ \n    json: { \n      ERROR: 'Error procesando inventario', \n      detalle: error.message\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3136,
+        592
+      ],
+      "id": "179e6e89-bd5e-4d14-91c7-83eb06aeb50a",
+      "name": "Procesar_actualizacion_inventario"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "PRODUCTO",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3840,
+        400
+      ],
+      "id": "6098c1f1-f4e1-4357-879d-f9bdc268cd09",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8582deaa-2a78-421a-980e-a35e73d07916",
+              "name": "PRODUCTO",
+              "value": "={{ $json.PRODUCTO }}",
+              "type": "string"
+            },
+            {
+              "id": "56b5ef83-cf55-4b64-9578-0d5a819ce511",
+              "name": "CANTIDAD",
+              "value": "={{ $json.CANTIDAD }}",
+              "type": "number"
+            },
+            {
+              "id": "84ed84b3-af6a-4dea-8bb1-ff992752ed42",
+              "name": "VALOR_UNITARIO",
+              "value": "={{ $json.VALOR_UNITARIO }}",
+              "type": "number"
+            },
+            {
+              "id": "e9297a2f-1812-4832-a7e6-0dafd8e7ebd9",
+              "name": "VALOR_TOTAL",
+              "value": "={{ $json.VALOR_TOTAL }}",
+              "type": "number"
+            },
+            {
+              "id": "7efaf158-9f0b-43ec-b3b1-223aeea0f776",
+              "name": "FECHA",
+              "value": "={{ $json.FECHA }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2656,
+        384
+      ],
+      "id": "ee30bcda-cd00-4805-99ba-c2c2446391c8",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8c3c14b8-5953-4e33-a111-44d6e0c7f7d6",
+              "name": "PRODUCTO",
+              "value": "={{ $json.PRODUCTO }}",
+              "type": "string"
+            },
+            {
+              "id": "c02899c8-cb13-4751-8864-9fb81d66474e",
+              "name": "STOCK_ACTUAL_UNIDADES",
+              "value": "={{ $json.STOCK_ACTUAL_UNIDADES }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3552,
+        592
+      ],
+      "id": "4b230fd4-ab04-419b-bbb0-c6487b9a6bdc",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Edit Fields').first().json.instancia }}",
+        "remoteJid": "={{ $('Edit Fields').first().json.wa_id }}",
+        "messageText": "={{ $('mensaje_confirmacion1').first().json.mensaje_texto }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        4272,
+        400
+      ],
+      "id": "42ae4ce4-a00c-4cad-af8e-62d00eb7a06c",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "B3iSOloEJUHghytc",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8d145fac-fbf5-438e-876c-1dbad85482f3",
+              "leftValue": "={{ $json.ERROR === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1952,
+        368
+      ],
+      "id": "bd68b4fe-766e-4c39-b58f-d1e8cbdf266a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Edit Fields').first().json.date_time }}",
+        "remoteJid": "={{ $('Edit Fields').first().json.wa_id }}",
+        "messageText": "={{ $json.MENSAJE_ERROR }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        176
+      ],
+      "id": "be8888b4-7955-4112-82c3-25004642a382",
+      "name": "Enviar texto1",
+      "credentials": {
+        "evolutionApi": {
+          "id": "B3iSOloEJUHghytc",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2928,
+        592
+      ],
+      "id": "8484df2f-af85-4ac6-8142-85acf447c3d8",
+      "name": "Merge Cache Inventario"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "ventas",
+          "mode": "list",
+          "cachedResultName": "ventas"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "producto": "={{ $json.PRODUCTO }}",
+            "cantidad": "={{ $json.CANTIDAD }}",
+            "valor_unitario": "={{ $json.VALOR_UNITARIO }}",
+            "valor_total": "={{ $json.VALOR_TOTAL }}",
+            "fecha": "={{ $('Edit Fields').first().json.date_time }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "producto",
+              "displayName": "producto",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cantidad",
+              "displayName": "cantidad",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_unitario",
+              "displayName": "valor_unitario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_total",
+              "displayName": "valor_total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "costo",
+              "displayName": "costo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sessionid",
+              "displayName": "sessionid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2272,
+        384
+      ],
+      "id": "f3ad67af-dbbf-41f5-a277-3f21c1447a24",
+      "name": "Guardar_venta_en_Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "QYN0UhXauGwlSaLm",
+          "name": "transito"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "cache_precios",
+          "mode": "list",
+          "cachedResultName": "cache_precios"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1152,
+        352
+      ],
+      "id": "9e0f2e87-0fc6-4f16-9837-257ff2e25ed9",
+      "name": "Obtener precios desde Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "QYN0UhXauGwlSaLm",
+          "name": "transito"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1440,
+        368
+      ],
+      "id": "9e801d01-4117-4e85-bbf4-7bdc06e48fd9",
+      "name": "Merge Precios"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    producto as \"PRODUCTO\",\n    unidad_medida as \"UNIDAD_MEDIDA\",\n    factor_unidades as \"FACTOR_UNIDADES\",\n    stock_actual_unidades as \"STOCK_ACTUAL_UNIDADES\"\nFROM cache_inventario\nORDER BY producto",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2672,
+        576
+      ],
+      "id": "d4901bff-2bbd-43d5-b862-0ea6a767dd12",
+      "name": "Obtener inventario desde Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "QYN0UhXauGwlSaLm",
+          "name": "transito"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE cache_inventario\nSET stock_actual_unidades = {{ $json.STOCK_ACTUAL_UNIDADES }},\n    updated_at = CURRENT_TIMESTAMP\nWHERE producto = '{{ $json.PRODUCTO }}'\nRETURNING *;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3328,
+        592
+      ],
+      "id": "d2c48583-697a-422b-8ea1-65fc277a3359",
+      "name": "Actualizar stock en Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "QYN0UhXauGwlSaLm",
+          "name": "transito"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "mensaje": "4 Arepas de QUESO 4 Chorizos",
+          "numero_telefono": "573103015865@s.whatsapp.net",
+          "date_time": "20/09/2025",
+          "instancia": "Gerson_cuentas"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "LIMPIA MENSAJE DE VENTA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LIMPIA MENSAJE DE VENTA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code_ventas": {
+      "main": [
+        [
+          {
+            "node": "Obtener precios desde Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cruce_precio_venta": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LIMPIA MENSAJE DE VENTA": {
+      "main": [
+        [
+          {
+            "node": "Code_ventas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mensaje_confirmacion1": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar_actualizacion_inventario": {
+      "main": [
+        [
+          {
+            "node": "Actualizar stock en Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "mensaje_confirmacion1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Guardar_venta_en_Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Cache Inventario": {
+      "main": [
+        [
+          {
+            "node": "Procesar_actualizacion_inventario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar_venta_en_Postgres": {
+      "main": [
+        [
+          {
+            "node": "Obtener inventario desde Postgres",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener precios desde Postgres": {
+      "main": [
+        [
+          {
+            "node": "Merge Precios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Precios": {
+      "main": [
+        [
+          {
+            "node": "Cruce_precio_venta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener inventario desde Postgres": {
+      "main": [
+        [
+          {
+            "node": "Merge Cache Inventario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar stock en Postgres": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "62167d36-c9eb-43e9-b377-d82907849e9c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "07f67ec32baaad4ae3d75f4e22d6ad4d1aa561c2ad8388f49ad7031ee0fe8de1"
+  },
+  "id": "3EC1nfxk6lvqjhjz",
+  "tags": []
+}
