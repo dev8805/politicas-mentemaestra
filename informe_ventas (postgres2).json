@@ -1,0 +1,421 @@
+{
+  "name": "informe_ventas",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "mensaje"
+            },
+            {
+              "name": "wa_id"
+            },
+            {
+              "name": "instancia"
+            },
+            {
+              "name": "fecha"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        160,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tomar el mensaje desde Telegram Trigger con manejo de errores\nlet raw = \"\";\ntry {\n  raw = $input.first().json.mensaje || \"\";\n} catch (error) {\n  console.log(\"Error obteniendo mensaje de Telegram:\", error.message);\n  return [{ json: { error: \"No se pudo obtener el mensaje de Telegram\" } }];\n}\n\n// Normalizar texto mejorado (minúsculas, sin tildes, sin caracteres especiales)\nfunction normalize(str) {\n  return String(str)\n    .toLowerCase()\n    .trim()\n    .replace(/[áàäâã]/g, \"a\")\n    .replace(/[éèëê]/g, \"e\")\n    .replace(/[íìïî]/g, \"i\")\n    .replace(/[óòöôõ]/g, \"o\")\n    .replace(/[úùüû]/g, \"u\")\n    .replace(/[ñ]/g, \"n\")\n    .replace(/[ç]/g, \"c\")\n    .replace(/\\s+/g, \" \"); // Múltiples espacios a uno solo\n}\n\nconst msg = normalize(raw);\nconsole.log(\"Mensaje normalizado:\", msg);\n\n// Obtener fecha de hoy en zona horaria de Bogotá optimizada\nfunction todayInTZ(tz = \"America/Bogota\") {\n  const now = new Date();\n  const formatter = new Intl.DateTimeFormat(\"en-CA\", {\n    timeZone: tz,\n    year: \"numeric\",\n    month: \"2-digit\",\n    day: \"2-digit\",\n  });\n  \n  const [year, month, day] = formatter.format(now).split('-');\n  return new Date(Number(year), Number(month) - 1, Number(day));\n}\n\n// Función para obtener el lunes de la semana actual\nfunction getMondayOfWeek(date) {\n  const d = new Date(date);\n  const day = d.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado\n  const diff = day === 0 ? -6 : 1 - day; // Si es domingo, retroceder 6 días\n  d.setDate(d.getDate() + diff);\n  return d;\n}\n\n// Función para obtener el domingo de la semana actual\nfunction getSundayOfWeek(date) {\n  const monday = getMondayOfWeek(date);\n  const sunday = new Date(monday);\n  sunday.setDate(monday.getDate() + 6);\n  return sunday;\n}\n\nfunction addDays(date, delta) {\n  const result = new Date(date);\n  result.setDate(result.getDate() + delta);\n  return result;\n}\n\nfunction formatDDMMYYYY(date) {\n  const dd = String(date.getDate()).padStart(2, \"0\");\n  const mm = String(date.getMonth() + 1).padStart(2, \"0\");\n  const yyyy = date.getFullYear();\n  return `${dd}-${mm}-${yyyy}`;\n}\n\n// Patrones de consulta más robustos\nconst patterns = {\n  hoy: /\\b(hoy|dia de hoy|ventas de hoy|hoy ventas)\\b/,\n  ayer: /\\b(ayer|dia de ayer|ventas de ayer|ayer ventas)\\b/,\n  semana: /\\b(semana|esta semana|ventas de la semana|semana actual)\\b/,\n  semanaCompleta: /\\b(semana completa|toda la semana|semana entera)\\b/,\n  mes: /\\b(mes|este mes|ventas del mes|mes actual|ultimos 30 dias|30 dias)\\b/,\n  // Nuevos patrones\n  antier: /\\b(antier|anteayer|antes de ayer)\\b/,\n  ultimosDias: /\\b(ultimos (\\d+) dias|(\\d+) dias)\\b/\n};\n\nconst hoy = todayInTZ();\nlet tipo = \"dia\";\nlet inicio = hoy;\nlet fin = hoy;\nlet descripcion = \"Ventas de hoy\";\n\n// Lógica de interpretación mejorada\nif (patterns.ayer.test(msg)) {\n  const ayer = addDays(hoy, -1);\n  inicio = ayer;\n  fin = ayer;\n  tipo = \"dia\";\n  descripcion = \"Ventas de ayer\";\n  \n} else if (patterns.antier.test(msg)) {\n  const antier = addDays(hoy, -2);\n  inicio = antier;\n  fin = antier;\n  tipo = \"dia\";\n  descripcion = \"Ventas de antier\";\n  \n} else if (patterns.semana.test(msg)) {\n  inicio = getMondayOfWeek(hoy); // Desde el lunes de esta semana\n  fin = hoy; // Hasta hoy\n  tipo = \"semana\";\n  descripcion = \"Ventas de esta semana (lunes a hoy)\";\n  \n} else if (patterns.semanaCompleta.test(msg)) {\n  inicio = getMondayOfWeek(hoy); // Desde el lunes\n  fin = getSundayOfWeek(hoy); // Hasta el domingo (puede ser futuro)\n  if (fin > hoy) fin = hoy; // No ir más allá de hoy\n  tipo = \"semana\";\n  descripcion = \"Ventas de la semana completa\";\n  \n} else if (patterns.mes.test(msg)) {\n  inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);\n  fin = hoy;\n  tipo = \"mes\";\n  descripcion = \"Ventas del mes\";\n  \n} else if (patterns.ultimosDias.test(msg)) {\n  const match = msg.match(/(\\d+)/);\n  if (match) {\n    const dias = parseInt(match[1]);\n    if (dias > 0 && dias <= 365) { // Validar rango razonable\n      inicio = addDays(hoy, -(dias - 1));\n      fin = hoy;\n      tipo = \"rango\";\n      descripcion = `Ventas de los últimos ${dias} días`;\n    }\n  }\n} else if (patterns.hoy.test(msg)) {\n  // Explícitamente \"hoy\" (ya está configurado por defecto)\n  descripcion = \"Ventas de hoy\";\n}\n\n// Log de depuración\nconsole.log(`Interpretación: ${descripcion}`);\nconsole.log(`Período: ${formatDDMMYYYY(inicio)} al ${formatDDMMYYYY(fin)}`);\n\n// Validación de fechas\nif (inicio > hoy) {\n  console.log(\"Advertencia: Fecha de inicio en el futuro, ajustando a hoy\");\n  inicio = hoy;\n}\n\nif (fin > hoy) {\n  console.log(\"Advertencia: Fecha de fin en el futuro, ajustando a hoy\");\n  fin = hoy;\n}\n\n// Resultado con más información\nreturn [{\n  json: {\n    // Datos originales (compatibilidad)\n    queryType: tipo,\n    fechaInicio: formatDDMMYYYY(inicio),\n    fechaFin: formatDDMMYYYY(fin),\n    textoInterpretado: msg,\n    \n    // Nuevos datos\n    mensajeOriginal: raw,\n    descripcion: descripcion,\n    diasIncluidos: Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1,\n    fechaConsulta: formatDDMMYYYY(hoy),\n    \n    // Para debugging\n    debug: {\n      patronEncontrado: Object.keys(patterns).find(key => patterns[key].test(msg)) || \"hoy (default)\",\n      fechasCalculadas: {\n        inicio: inicio.toISOString().split('T')[0],\n        fin: fin.toISOString().split('T')[0]\n      }\n    }\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        352
+      ],
+      "id": "5829df08-97fa-4dd8-9838-c125f9b91af8",
+      "name": "Interpretar_mensaje"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 4,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1408,
+        320
+      ],
+      "id": "5a1889c6-cd51-4ce3-859f-b2c1333e9707",
+      "name": "Merge1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf5df9b0-6955-4b90-b679-6e957c06305a",
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}",
+              "type": "string"
+            },
+            {
+              "id": "6da972ba-322f-4112-b4e2-b243a51e8239",
+              "name": "wa_id",
+              "value": "={{ $json.wa_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d12a8370-2dab-46c2-9f3e-8f8770c14a79",
+              "name": "instancia",
+              "value": "={{ $json.instancia }}",
+              "type": "string"
+            },
+            {
+              "id": "e12fa449-cf4a-422a-81f5-829e24820548",
+              "name": "fecha",
+              "value": "={{ $json.fecha }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        352
+      ],
+      "id": "b1f3bf3f-1a7e-4d1d-abdc-2f1d9f5bbe11",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Edit Fields').first().json.instancia }}",
+        "remoteJid": "={{ $('Edit Fields').first().json.wa_id }}",
+        "messageText": "={{ $json.mensaje_texto }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2224,
+        352
+      ],
+      "id": "8890f76d-cecb-48f5-a57f-fbee731adfa7",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "B3iSOloEJUHghytc",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== GENERADOR DE MENSAJE DE VENTAS =====\nconsole.log('=== GENERANDO MENSAJE DE CONFIRMACIÓN ===');\n\ntry {\n  // Obtener datos del nodo anterior\n  const datos = $input.first().json;\n  \n  // ===== FUNCIONES AUXILIARES =====\n  \n  function formatearNumero(valor) {\n    return new Intl.NumberFormat('es-CO').format(valor);\n  }\n\n  function formatearPeso(valor) {\n    return '$' + formatearNumero(valor);\n  }\n\n  function manejarSingularPlural(cantidad, palabra) {\n    if (cantidad === 1) {\n      if (palabra === 'unidades') {\n        return 'unidad';\n      }\n      if (palabra.endsWith('s')) {\n        return palabra.slice(0, -1);\n      }\n    }\n    return palabra;\n  }\n\n  function obtenerDiaSemana(fecha) {\n    const [dia, mes, año] = fecha.split('-');\n    const fechaObj = new Date(año, mes - 1, dia);\n    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];\n    return dias[fechaObj.getDay()];\n  }\n\n  function fechaLegible(fecha) {\n    const [dia, mes, año] = fecha.split('-');\n    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',\n                   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];\n    const diaSemana = obtenerDiaSemana(fecha);\n    return `${diaSemana}, ${parseInt(dia)} de ${meses[parseInt(mes)-1]} de ${año}`;\n  }\n\n  function fechaLegibleCorta(fecha) {\n    const [dia, mes] = fecha.split('-');\n    return `${dia}/${mes}`;\n  }\n\n  // ===== CONSTRUIR MENSAJE =====\n  let mensaje = '';\n\n  if (datos.tipoConsulta === 'semana' || datos.tipoConsulta === 'mes') {\n    mensaje = '📊 RESUMEN SEMANAL\\n';\n    mensaje += `📅 ${fechaLegibleCorta(datos.fechaInicio)} al ${fechaLegibleCorta(datos.fechaFin)}\\n`;\n  } else {\n    mensaje = '📊 RESUMEN DE VENTAS\\n';\n    mensaje += `📅 ${fechaLegible(datos.fechaInicio)}\\n`;\n  }\n  \n  mensaje += '━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n';\n\n  // ===== SECCIÓN DE VENTAS =====\n  if (datos.hay_ventas) {\n    mensaje += '📦 *PRODUCTOS VENDIDOS:*\\n';\n\n    // Lista de productos que no muestran stock y tienen orden fijo\n    const productosSinStock = [\"Arepas de QUESO\", \"Arepa BURGUER\", \"Chorizos\"];\n\n    const productosVentas = Object.entries(datos.ventas.productos);\n\n    // Separar excluidos y normales\n    const excluidos = productosSinStock\n      .map(nombre => productosVentas.find(([producto]) => producto === nombre))\n      .filter(Boolean); // elimina los que no existan en ventas\n\n    const normales = productosVentas\n      .filter(([producto]) => !productosSinStock.includes(producto))\n      .sort(([,a], [,b]) => b.cantidad - a.cantidad);\n\n    const productosOrdenados = [...excluidos, ...normales];\n\n    productosOrdenados.forEach(([producto, info]) => {\n      mensaje += `• ${formatearNumero(info.cantidad)} ${producto} | ${formatearPeso(info.valor)}`;\n\n      if (!productosSinStock.includes(producto)) {\n        if (info.stock > 0) {\n          const stockTexto = manejarSingularPlural(info.stock, 'unidades');\n          mensaje += ` | Stock: ${formatearNumero(info.stock)} ${stockTexto}\\n`;\n        } else if (info.stock === 0) {\n          mensaje += ' | ⚠️ Agotado\\n';\n        } else {\n          mensaje += '\\n';\n        }\n      } else {\n        mensaje += '\\n';\n      }\n    });\n\n    mensaje += '\\n━━━━━━━━━━━━━━━━━━━━━━━━━\\n';\n    mensaje += `📈 TOTAL VENTAS: ${formatearPeso(datos.ventas.total)}\\n\\n`;\n  } else {\n    mensaje += '⚠️ No se registraron ventas para este período\\n\\n';\n  }\n\n  // ===== SECCIÓN DE COMPRAS =====\n  if (datos.hay_compras) {\n    mensaje += '🛒 *COMPRAS:*\\n';\n    const productosCompras = Object.entries(datos.compras.productos)\n      .sort(([,a], [,b]) => b.cantidad - a.cantidad);\n\n    productosCompras.forEach(([producto, info]) => {\n      const factorTexto = manejarSingularPlural(info.cantidad, info.factor);\n      mensaje += `• ${formatearNumero(info.cantidad)} ${factorTexto} ${producto}\\n`;\n    });\n    mensaje += '\\n';\n  }\n\n  // ===== SECCIÓN DE CONSUMOS PERSONALES =====\n  if (datos.hay_consumos) {\n    mensaje += '🏠 *CONSUMOS PERSONALES:*\\n';\n    const productosConsumos = Object.entries(datos.consumos.productos)\n      .sort(([,a], [,b]) => b - a);\n\n    productosConsumos.forEach(([producto, cantidad]) => {\n      mensaje += `• ${formatearNumero(cantidad)} ${producto}\\n`;\n    });\n  }\n\n  console.log('✅ Mensaje generado exitosamente');\n  console.log(`   • Longitud: ${mensaje.length} caracteres`);\n  console.log(`   • Productos vendidos: ${datos.ventas.cantidad_productos}`);\n  console.log(`   • Total ventas: ${formatearPeso(datos.ventas.total)}`);\n\n  return [{\n    json: {\n      mensaje_texto: mensaje,\n      estadisticas: {\n        total_ventas: datos.ventas.total,\n        productos_vendidos: datos.ventas.cantidad_productos,\n        productos_consumidos: datos.consumos.cantidad_productos,\n        productos_comprados: datos.compras.cantidad_productos,\n        hay_ventas: datos.hay_ventas,\n        hay_consumos: datos.hay_consumos,\n        hay_compras: datos.hay_compras\n      }\n    }\n  }];\n\n} catch (error) {\n  console.log('❌ ERROR generando mensaje:', error.message);\n  \n  return [{\n    json: {\n      error: true,\n      mensaje_texto: `❌ Error generando mensaje: ${error.message}`,\n      timestamp: new Date().toISOString()\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        352
+      ],
+      "id": "002ce195-b8f9-4b77-b4f8-1c3347d3a16c",
+      "name": "creaMensaje"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ==========================\n// extraeDatos (adaptado a tus nodos Postgres)\n// ==========================\n\n// ----- Helpers -----\nfunction normalizarFecha(fecha) {\n  if (fecha === null || fecha === undefined || fecha === '') return null;\n\n  if (fecha instanceof Date && !isNaN(fecha)) {\n    return fecha.toISOString().split('T')[0];\n  }\n\n  if (typeof fecha === 'number') {\n    const ts = fecha < 1e12 ? fecha * 1000 : fecha;\n    const d = new Date(ts);\n    if (!isNaN(d)) return d.toISOString().split('T')[0];\n    return null;\n  }\n\n  if (typeof fecha === 'string') {\n    fecha = fecha.trim();\n\n    if (/^\\d{4}[-/]\\d{2}[-/]\\d{2}/.test(fecha)) {\n      const parsed = Date.parse(fecha);\n      if (!isNaN(parsed)) return new Date(parsed).toISOString().split('T')[0];\n    }\n\n    if (/^\\d{2}-\\d{2}-\\d{4}$/.test(fecha)) {\n      const [dd, mm, yyyy] = fecha.split('-');\n      return `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;\n    }\n\n    if (/^\\d{2}\\/\\d{2}\\/\\d{4}$/.test(fecha)) {\n      const [dd, mm, yyyy] = fecha.split('/');\n      return `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;\n    }\n\n    const parsed = Date.parse(fecha);\n    if (!isNaN(parsed)) return new Date(parsed).toISOString().split('T')[0];\n  }\n\n  return null;\n}\n\nfunction extraerFechaItem(item) {\n  if (!item || typeof item !== 'object') return null;\n  const prefer = ['FECHA','fecha','created_at','updated_at','fecha_venta','fecha_compra'];\n  for (const k of prefer) {\n    if (k in item && item[k]) return item[k];\n    const low = k.toLowerCase();\n    if (low in item && item[low]) return item[low];\n    const up = k.toUpperCase();\n    if (up in item && item[up]) return item[up];\n  }\n  for (const k of Object.keys(item)) {\n    if (/fecha|date|time|timestamp|created_at/i.test(k) && item[k]) return item[k];\n  }\n  return null;\n}\n\nfunction extraerTextoProducto(item) {\n  if (!item || typeof item !== 'object') return '';\n  return (item.PRODUCTO || item.producto || '').toString().trim();\n}\n\nfunction extraerCantidad(item) {\n  if (!item || typeof item !== 'object') return 0;\n  const cand = item.CANTIDAD || item.cantidad || 0;\n  const n = parseFloat(cand);\n  return isNaN(n) ? 0 : n;\n}\n\nfunction extraerValor(item) {\n  if (!item || typeof item !== 'object') return 0;\n  const cand = item.VALOR_TOTAL || item.valor_total || item.PRECIO || item.precio || 0;\n  const n = parseFloat(String(cand).replace(/[^0-9\\.\\-]/g, ''));\n  return isNaN(n) ? 0 : n;\n}\n\n// ----- Obtener consulta -----\nlet consulta = null;\ntry {\n  consulta = $('Interpretar_mensaje').item.json;\n} catch(e) {\n  consulta = $input.first() ? $input.first().json : null;\n}\n\nif (!consulta) {\n  return [{\n    json: {\n      error: true,\n      mensaje: 'No se encontró Interpretar_mensaje',\n      debug: {}\n    }\n  }];\n}\n\n// Fechas\nlet fechaInicio = null;\nlet fechaFin = null;\nif (consulta.debug && consulta.debug.fechasCalculadas) {\n  fechaInicio = normalizarFecha(consulta.debug.fechasCalculadas.inicio || consulta.fechaInicio);\n  fechaFin   = normalizarFecha(consulta.debug.fechasCalculadas.fin || consulta.fechaFin);\n} else {\n  fechaInicio = normalizarFecha(consulta.fechaInicio);\n  fechaFin = normalizarFecha(consulta.fechaFin);\n}\n\nconst hoyIso = new Date().toISOString().split('T')[0];\nif (!fechaInicio) fechaInicio = hoyIso;\nif (!fechaFin) fechaFin = hoyIso;\n\n// ----- Cargar datos -----\nconst ventasRaw = ($('obtener_ventas').all() || []).map(i => i.json);\nconst inventarioRaw = ($('obtener_inventario').all() || []).map(i => i.json);\nconst consumosRaw = ($('obtener_consumos').all() || []).map(i => i.json);\nconst comprasRaw = ($('registroEntradaInventario1').all() || []).map(i => i.json);\n\n// Filtrar por rango\nfunction filtrarPorRango(arr) {\n  if (!Array.isArray(arr)) return [];\n  return arr.filter(item => {\n    const rawFecha = extraerFechaItem(item);\n    const iso = normalizarFecha(rawFecha);\n    return iso && iso >= fechaInicio && iso <= fechaFin;\n  });\n}\n\nconst ventasFiltrados = filtrarPorRango(ventasRaw);\nconst consumosFiltrados = filtrarPorRango(consumosRaw);\nconst comprasFiltrados = filtrarPorRango(comprasRaw);\n\n// Inventario map\nconst inventarioMap = {};\ninventarioRaw.forEach(row => {\n  if (!row) return;\n  const name = (row.PRODUCTO || row.producto || '').toString().trim();\n  const stock = parseInt(row.STOCK_ACTUAL_UNIDADES || row.stock_actual_unidades || 0) || 0;\n  if (name) inventarioMap[name.toLowerCase()] = stock;\n});\n\n// Resumen ventas\nconst ventasResumen = {};\nlet totalVentasValor = 0;\n\nventasFiltrados.forEach(v => {\n  const producto = extraerTextoProducto(v);\n  if (!producto) return;\n  const cantidad = extraerCantidad(v);\n  const valor = extraerValor(v);\n  if (!ventasResumen[producto]) ventasResumen[producto] = { cantidad: 0, valor: 0, stock: 0 };\n  ventasResumen[producto].cantidad += cantidad;\n  ventasResumen[producto].valor += valor;\n  totalVentasValor += valor;\n});\n\n// Añadir stock a ventasResumen\nObject.keys(ventasResumen).forEach(p => {\n  const k = p.toLowerCase();\n  ventasResumen[p].stock = inventarioMap[k] || 0;\n});\n\n// Resumen consumos\nconst consumosResumen = {};\nlet totalConsumos = 0;\nconsumosFiltrados.forEach(c => {\n  const producto = (c.PRODUCTO || c.producto || '').toString().trim();\n  if (!producto) return;\n  const cantidad = parseInt(c.CANTIDAD || c.cantidad || 0) || 0;\n  consumosResumen[producto] = (consumosResumen[producto] || 0) + cantidad;\n  totalConsumos += cantidad;\n});\n\n// Resumen compras (usa unidad_medida como factor string)\nconst comprasResumen = {};\nlet totalCompras = 0;\ncomprasFiltrados.forEach(c => {\n  const producto = (c.PRODUCTO || c.producto || '').toString().trim().toLowerCase();\n  if (!producto) return;\n  const cantidad = parseInt(c.CANTIDAD || c.cantidad || 0) || 0;\n\n  // Buscar unidad_medida en inventario\n  const inventarioItem = inventarioRaw.find(i =>\n    (i.PRODUCTO || i.producto || '').toString().trim().toLowerCase() === producto\n  );\n\n  let factor = null;\n  if (inventarioItem) {\n    factor = inventarioItem.UNIDAD_MEDIDA || inventarioItem.unidad_medida || null;\n  }\n\n  if (!comprasResumen[producto]) comprasResumen[producto] = { cantidad: 0, factor };\n  comprasResumen[producto].cantidad += cantidad;\n  totalCompras += cantidad;\n});\n\n// Resultado final\nreturn [{\n  json: {\n    queryType: consulta.queryType || 'dia',\n    fechaInicio,\n    fechaFin,\n    descripcion: consulta.descripcion || null,\n    textoInterpretado: consulta.textoInterpretado || consulta.mensajeOriginal || null,\n\n    ventas: {\n      productos: ventasResumen,\n      total: totalVentasValor,\n      cantidad_productos: Object.keys(ventasResumen).length,\n      total_transacciones: ventasFiltrados.length\n    },\n    consumos: {\n      productos: consumosResumen,\n      total_cantidad: totalConsumos,\n      cantidad_productos: Object.keys(consumosResumen).length\n    },\n    compras: {\n      productos: comprasResumen,\n      total_cantidad: totalCompras,\n      cantidad_productos: Object.keys(comprasResumen).length\n    },\n    inventario: {\n      productos: inventarioMap,\n      total_productos: Object.keys(inventarioMap).length\n    },\n\n    hay_ventas: Object.keys(ventasResumen).length > 0,\n    hay_consumos: Object.keys(consumosResumen).length > 0,\n    hay_compras: Object.keys(comprasResumen).length > 0\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        352
+      ],
+      "id": "f226948b-02d7-4d63-a701-aa0aeb857685",
+      "name": "extraeDatos"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "registro_entrada_inventario",
+          "mode": "list",
+          "cachedResultName": "registro_entrada_inventario"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1024,
+        704
+      ],
+      "id": "f1fd8a76-b70a-4249-976e-c754b63f90c3",
+      "name": "registroEntradaInventario1",
+      "credentials": {
+        "postgres": {
+          "id": "QYN0UhXauGwlSaLm",
+          "name": "transito"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "consumos_personales",
+          "mode": "list",
+          "cachedResultName": "consumos_personales"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1024,
+        496
+      ],
+      "id": "29755c41-41af-4ff9-a3d7-5e5299bb0adf",
+      "name": "obtener_consumos",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "QYN0UhXauGwlSaLm",
+          "name": "transito"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    producto as \"PRODUCTO\",\n    unidad_medida as \"UNIDAD_MEDIDA\",\n    factor_unidades as \"FACTOR_UNIDADES\",\n    stock_actual_unidades as \"STOCK_ACTUAL_UNIDADES\"\nFROM cache_inventario\nORDER BY producto",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1024,
+        288
+      ],
+      "id": "e676337c-42bd-42d5-9715-329d3ddb50d5",
+      "name": "obtener_inventario",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "QYN0UhXauGwlSaLm",
+          "name": "transito"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "ventas",
+          "mode": "list",
+          "cachedResultName": "ventas"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1024,
+        80
+      ],
+      "id": "3dce8b45-514c-4b1c-8ddd-b85d9d8fc46f",
+      "name": "obtener_ventas",
+      "credentials": {
+        "postgres": {
+          "id": "QYN0UhXauGwlSaLm",
+          "name": "transito"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "mensaje": "ventas",
+          "wa_id": "573103015865@s.whatsapp.net",
+          "instancia": "Gerson_cuentas",
+          "fecha": "25/09/2025"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar_mensaje": {
+      "main": [
+        [
+          {
+            "node": "obtener_ventas",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "obtener_inventario",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "obtener_consumos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "registroEntradaInventario1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "extraeDatos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Interpretar_mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "creaMensaje": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extraeDatos": {
+      "main": [
+        [
+          {
+            "node": "creaMensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registroEntradaInventario1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "obtener_consumos": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "obtener_inventario": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "obtener_ventas": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "24abef80-198e-4226-96ea-fdcb5a83baf3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "07f67ec32baaad4ae3d75f4e22d6ad4d1aa561c2ad8388f49ad7031ee0fe8de1"
+  },
+  "id": "wrULXZDPO5EmNxd3",
+  "tags": []
+}
